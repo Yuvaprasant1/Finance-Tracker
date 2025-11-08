@@ -1,0 +1,86 @@
+# Git files
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+README.md
+*.md
+EXCEPTION_HANDLERS.md
+
+# IDE files
+.idea
+.vscode
+*.iml
+*.iws
+*.ipr
+*.code-workspace
+.settings
+.project
+.classpath
+
+# Build artifacts (will be built in Docker)
+build/
+target/
+bin/
+out/
+*.class
+*.jar
+*.war
+*.ear
+
+# Gradle
+.gradle/
+gradle-user-home/
+
+# Maven
+.mvn/
+mvnw
+mvnw.cmd
+
+# Environment files
+.env
+.env.local
+.env.*.local
+.env.production
+.env.prod
+*.env
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+*~
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+.cache/
+
+# Test files
+test/
+*.test
+
+# Scripts (not needed in container)
+scripts/
+
+# Docker files
+Dockerfile
+.dockerignore
+docker-compose.yml
+docker-compose.*.yml
+
+# Render configuration
+render.yaml
+

@@ -1,0 +1,45 @@
+# Render Blueprint for Finance Tracker Backend
+# This file defines the infrastructure for deploying the application on Render
+
+services:
+  # Backend Web Service
+  - type: web
+    name: finance-tracker-backend
+    env: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free  # Change to 'starter' or 'standard' for production
+    region: oregon  # Change to your preferred region
+    branch: main  # Change to your default branch
+    
+    # Environment variables (set these in Render dashboard for security)
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      
+      # MongoDB Configuration (REQUIRED - set in Render dashboard)
+      # - key: MONGODB_URI
+      #   value: your-mongodb-connection-string
+      # - key: MONGODB_DATABASE
+      #   value: finance_tracker
+      
+      # Server Configuration
+      - key: SERVER_PORT
+        value: 8080
+      
+      # Optional: Additional configuration
+      - key: JAVA_OPTS
+        value: -Xmx512m -Xms256m
+    
+    # Health check configuration
+    healthCheckPath: /finance-tracker/actuator/health
+    
+    # Auto-deploy settings
+    autoDeploy: true
+    
+    # Build command (optional, Dockerfile handles this)
+    # buildCommand: ""
+    
+    # Start command (optional, Dockerfile handles this)
+    # startCommand: ""
+
