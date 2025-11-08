@@ -30,8 +30,18 @@ target/
 # Application properties (local/secret files)
 application-local.properties
 application-secret.properties
-application-dev.properties
 *.local.properties
+
+# Environment variables and secrets
+.env
+.env.local
+.env.*.local
+.env.production
+.env.prod
+
+# Note: application-dev.properties and application-prod.properties are committed
+# All sensitive values (like MONGODB_URI) must be provided via environment variables
+# See .env.example for required environment variables
 
 # IDE - IntelliJ IDEA
 .idea/

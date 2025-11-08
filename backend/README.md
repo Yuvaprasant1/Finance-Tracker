@@ -28,19 +28,86 @@ git clone <repository-url>
 cd Finance-Tracker/backend
 ```
 
-### 2. Configure MongoDB
+### 2. Configure Profiles
 
-Update the MongoDB connection string in `src/main/resources/application.properties`:
+The application uses Spring profiles for different environments:
 
-```properties
-spring.data.mongodb.uri=mongodb://localhost:27017/finance_tracker
-spring.data.mongodb.database=finance_tracker
+- **dev** (default) - Local development with local MongoDB
+- **prod** - Production with MongoDB Atlas
+
+#### Development Profile (Default)
+
+The `application-dev.properties` is configured for local development:
+- Uses local MongoDB: `mongodb://localhost:27017/finance_tracker`
+- More verbose logging
+- DevTools enabled
+
+No configuration needed - it's the default profile.
+
+#### Production Profile
+
+The `application-prod.properties` is configured for production:
+- **REQUIRES** MongoDB Atlas connection string via `MONGODB_URI` environment variable
+- Production logging levels
+- DevTools disabled
+
+**Setup Production Environment Variables:**
+
+1. Copy the example environment file:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Edit `.env` file with your MongoDB Atlas credentials:
+   ```bash
+   SPRING_PROFILES_ACTIVE=prod
+   MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/database?retryWrites=true&w=majority
+   MONGODB_DATABASE=finance_tracker
+   ```
+
+3. Load environment variables and run:
+
+   **Linux/Mac:**
+   ```bash
+   source scripts/setup-env.sh
+   ./gradlew bootRun
+   ```
+
+   **Windows PowerShell:**
+   ```powershell
+   .\scripts\setup-env.ps1
+   .\gradlew.bat bootRun
+   ```
+
+   **Windows CMD:**
+   ```cmd
+   scripts\setup-env.bat
+   gradlew.bat bootRun
+   ```
+
+**Alternative: Manual Environment Variable Setup**
+
+```bash
+# Linux/Mac
+export SPRING_PROFILES_ACTIVE=prod
+export MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/database?retryWrites=true&w=majority
+export MONGODB_DATABASE=finance_tracker
+./gradlew bootRun
+
+# Windows PowerShell
+$env:SPRING_PROFILES_ACTIVE="prod"
+$env:MONGODB_URI="mongodb+srv://username:password@cluster.mongodb.net/database?retryWrites=true&w=majority"
+$env:MONGODB_DATABASE="finance_tracker"
+.\gradlew.bat bootRun
+
+# Windows CMD
+set SPRING_PROFILES_ACTIVE=prod
+set MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/database?retryWrites=true&w=majority
+set MONGODB_DATABASE=finance_tracker
+gradlew.bat bootRun
 ```
 
-For remote MongoDB:
-```properties
-spring.data.mongodb.uri=mongodb://username:password@host:port/finance_tracker
-```
+**Security Note:** The `.env` file is excluded from version control. Never commit credentials to the repository.
 
 ### 3. Build the Project
 
@@ -62,23 +129,47 @@ gradle build
 
 ### Application Properties
 
-The main configuration file is located at `src/main/resources/application.properties`:
+#### Common Configuration (`application.properties`)
 
 ```properties
-# MongoDB Configuration
-spring.data.mongodb.uri=mongodb://localhost:27017/finance_tracker
-spring.data.mongodb.database=finance_tracker
+# Spring Profile Configuration
+spring.profiles.active=${SPRING_PROFILES_ACTIVE:dev}
+
+# Application Properties
+spring.application.name=finance-tracker
 
 # Server Configuration
 server.port=8080
 server.servlet.context-path=/finance-tracker
 
-# Application Properties
-spring.application.name=financialTransaction-tracker
-
 # Mongock Configuration (Database Migrations)
 mongock.migration-scan-package=com.finance.tracker.currency.changelog
 ```
+
+#### Development Profile (`application-dev.properties`)
+
+```properties
+# MongoDB Configuration - Local Development
+spring.data.mongodb.uri=mongodb://localhost:27017/finance_tracker
+spring.data.mongodb.database=finance_tracker
+
+# Verbose logging for development
+logging.level.com.finance.tracker=DEBUG
+```
+
+#### Production Profile (`application-prod.properties`)
+
+```properties
+# MongoDB Configuration - Production (MongoDB Atlas)
+# REQUIRED: Set MONGODB_URI environment variable
+spring.data.mongodb.uri=${MONGODB_URI}
+spring.data.mongodb.database=${MONGODB_DATABASE:finance_tracker}
+
+# Production logging
+logging.level.com.finance.tracker=INFO
+```
+
+**Security:** All sensitive values are stored as environment variables. See [Environment Variables Setup](#environment-variables-setup) section below.
 
 ### CORS Configuration
 
@@ -101,7 +192,24 @@ The API will be available at: `http://localhost:8080/finance-tracker`
 ### Run JAR File
 
 After building, run the generated JAR:
+
+**Development:**
 ```bash
+java -jar build/libs/finance-tracker-1.0.0.jar
+```
+
+**Production:**
+```bash
+# Using command line argument
+java -jar build/libs/finance-tracker-1.0.0.jar --spring.profiles.active=prod
+
+# Using environment variable
+export SPRING_PROFILES_ACTIVE=prod
+java -jar build/libs/finance-tracker-1.0.0.jar
+
+# With MongoDB URI from environment variable
+export MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/database
+export SPRING_PROFILES_ACTIVE=prod
 java -jar build/libs/finance-tracker-1.0.0.jar
 ```
 
@@ -270,14 +378,82 @@ The JAR file will be created at: `build/libs/finance-tracker-1.0.0.jar`
 java -jar build/libs/finance-tracker-1.0.0.jar
 ```
 
-### Environment Variables
+## Environment Variables Setup
 
-For production, use environment variables or externalized configuration:
+### Required Environment Variables for Production
 
+The production profile **requires** the following environment variables (no hardcoded fallbacks for security):
+
+| Variable | Required | Description | Example |
+|----------|----------|-------------|---------|
+| `MONGODB_URI` | **Yes** | MongoDB Atlas connection string | `mongodb+srv://user:pass@cluster.mongodb.net/db?retryWrites=true&w=majority` |
+| `SPRING_PROFILES_ACTIVE` | **Yes** | Spring profile to activate | `prod` |
+| `MONGODB_DATABASE` | No | Database name (defaults to `finance_tracker`) | `finance_tracker` |
+| `SERVER_PORT` | No | Server port (defaults to `8080`) | `8080` |
+
+### Setup Using .env File (Recommended)
+
+1. **Copy the example file:**
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **Edit `.env` with your actual credentials:**
+   ```bash
+   SPRING_PROFILES_ACTIVE=prod
+   MONGODB_URI=mongodb+srv://your-username:your-password@your-cluster.mongodb.net/your-database?retryWrites=true&w=majority
+   MONGODB_DATABASE=finance_tracker
+   ```
+
+3. **Load environment variables:**
+
+   **Linux/Mac:**
+   ```bash
+   source scripts/setup-env.sh
+   ```
+
+   **Windows PowerShell:**
+   ```powershell
+   .\scripts\setup-env.ps1
+   ```
+
+   **Windows CMD:**
+   ```cmd
+   scripts\setup-env.bat
+   ```
+
+### Manual Environment Variable Setup
+
+**Linux/Mac:**
 ```bash
-export SPRING_DATA_MONGODB_URI=mongodb://your-mongodb-uri
-export SERVER_PORT=8080
+export SPRING_PROFILES_ACTIVE=prod
+export MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/database?retryWrites=true&w=majority
+export MONGODB_DATABASE=finance_tracker
 ```
+
+**Windows PowerShell:**
+```powershell
+$env:SPRING_PROFILES_ACTIVE="prod"
+$env:MONGODB_URI="mongodb+srv://username:password@cluster.mongodb.net/database?retryWrites=true&w=majority"
+$env:MONGODB_DATABASE="finance_tracker"
+```
+
+**Windows CMD:**
+```cmd
+set SPRING_PROFILES_ACTIVE=prod
+set MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/database?retryWrites=true&w=majority
+set MONGODB_DATABASE=finance_tracker
+```
+
+### Security Best Practices
+
+- ✅ **Never commit `.env` file** to version control (already in `.gitignore`)
+- ✅ **Use environment variables** for all sensitive data (no hardcoded credentials)
+- ✅ **Rotate credentials** regularly
+- ✅ **Use different credentials** for dev/staging/production
+- ✅ **Limit database access** to specific IP addresses in MongoDB Atlas
+- ✅ **Use MongoDB Atlas network access controls** for additional security
+- ✅ **Never share credentials** in code, documentation, or commit messages
 
 ## Development
 
@@ -300,9 +476,22 @@ The project uses Lombok for reducing boilerplate code and follows Spring Boot be
    mongod
    ```
 
-2. Check MongoDB connection string in `application.properties`
+2. For production: Check that `MONGODB_URI` environment variable is set correctly
+   ```bash
+   echo $MONGODB_URI  # Linux/Mac
+   echo %MONGODB_URI%  # Windows CMD
+   $env:MONGODB_URI    # Windows PowerShell
+   ```
 
-3. Verify MongoDB is accessible on the configured port (default: 27017)
+3. For development: Verify MongoDB is accessible on the configured port (default: 27017)
+   ```bash
+   mongod
+   ```
+
+4. Check that the correct Spring profile is active:
+   ```bash
+   echo $SPRING_PROFILES_ACTIVE  # Linux/Mac
+   ```
 
 ### Port Already in Use
 

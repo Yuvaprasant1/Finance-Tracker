@@ -1,0 +1,29 @@
+# Production Profile Configuration Example
+# 
+# NOTE: This is just an example file. The actual application-prod.properties
+# uses ONLY environment variables for security. Never hardcode credentials.
+#
+# To configure production:
+# 1. Set environment variables (see .env.example)
+# 2. Or use the setup scripts in scripts/ directory
+
+# MongoDB Configuration - Production (MongoDB Atlas)
+# REQUIRED: Set MONGODB_URI environment variable
+# This file shows the structure, but actual credentials come from environment variables
+spring.data.mongodb.uri=${MONGODB_URI}
+spring.data.mongodb.database=${MONGODB_DATABASE:finance_tracker}
+
+# Server Configuration
+server.port=${SERVER_PORT:8080}
+
+# Logging Configuration
+logging.level.root=WARN
+logging.level.com.finance.tracker=INFO
+
+# Mongock Configuration
+mongock.runner.enabled=true
+
+# Spring Boot DevTools - Disabled in production
+spring.devtools.restart.enabled=false
+spring.devtools.livereload.enabled=false
+
