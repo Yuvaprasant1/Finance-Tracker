@@ -1,0 +1,50 @@
+/* CSS Variables for Light Theme */
+:root[data-theme='light'] {
+  --bg-primary: #f8f9fa;
+  --bg-secondary: #ffffff;
+  --text-primary: #1a1a1a;
+  --text-secondary: #6c757d;
+  --primary-color: #4a90e2;
+  --primary-hover: #357abd;
+  --secondary-color: #6c757d;
+  --success-color: #28a745;
+  --danger-color: #dc3545;
+  --danger-hover: #c82333;
+  --border-color: #e0e0e0;
+  --card-bg: #ffffff;
+  --hover-bg: #f0f0f0;
+  --menu-bg: #ffffff;
+  --shadow: rgba(0, 0, 0, 0.1);
+  --shadow-hover: rgba(0, 0, 0, 0.15);
+}
+
+/* CSS Variables for Dark Theme */
+:root[data-theme='dark'] {
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #2d2d2d;
+  --text-primary: #e0e0e0;
+  --text-secondary: #a0a0a0;
+  --primary-color: #5ba3f5;
+  --primary-hover: #4a90e2;
+  --secondary-color: #6c757d;
+  --success-color: #34ce57;
+  --danger-color: #e74c3c;
+  --danger-hover: #c0392b;
+  --border-color: #404040;
+  --card-bg: #2d2d2d;
+  --hover-bg: #3a3a3a;
+  --menu-bg: #252525;
+  --shadow: rgba(0, 0, 0, 0.3);
+  --shadow-hover: rgba(0, 0, 0, 0.4);
+}
+
+* {
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.App {
+  min-height: 100vh;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
