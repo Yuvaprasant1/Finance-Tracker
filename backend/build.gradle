@@ -28,6 +28,9 @@ dependencies {
     // Spring Boot Validation
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     
+    // Spring Boot Actuator
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    
     // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'

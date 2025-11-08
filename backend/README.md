@@ -455,6 +455,44 @@ set MONGODB_DATABASE=finance_tracker
 - ✅ **Use MongoDB Atlas network access controls** for additional security
 - ✅ **Never share credentials** in code, documentation, or commit messages
 
+## Monitoring and Health Checks
+
+### Spring Boot Actuator
+
+The application includes Spring Boot Actuator for monitoring and health checks.
+
+#### Available Endpoints
+
+**Development:**
+- All endpoints are exposed for debugging
+- Health details are always shown
+
+**Production:**
+- Health: `/actuator/health` - Application health status
+- Info: `/actuator/info` - Application information
+- Metrics: `/actuator/metrics` - Application metrics
+- Prometheus: `/actuator/prometheus` - Prometheus metrics export
+
+#### Access Endpoints
+
+```bash
+# Health check
+curl http://localhost:8080/finance-tracker/actuator/health
+
+# Metrics
+curl http://localhost:8080/finance-tracker/actuator/metrics
+
+# Prometheus metrics (production)
+curl http://localhost:8080/finance-tracker/actuator/prometheus
+```
+
+#### Security Considerations
+
+- **Development:** All endpoints are exposed for debugging purposes
+- **Production:** Only essential endpoints (health, info, metrics, prometheus) are exposed
+- Health details are shown only when authorized
+- Sensitive endpoints (env, configprops, beans) are excluded by default in production
+
 ## Development
 
 ### Running Tests
