@@ -458,14 +458,31 @@ Alternatively, use the `render.yaml` file for Infrastructure as Code:
 
 Required environment variables in Render:
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `SPRING_PROFILES_ACTIVE` | Spring profile | `prod` |
-| `MONGODB_URI` | MongoDB connection string | `mongodb+srv://...` |
-| `MONGODB_DATABASE` | Database name | `finance_tracker` |
-| `SERVER_PORT` | Server port (optional, defaults to 8080) | `8080` |
+| Variable | Description | Example | Required |
+|----------|-------------|---------|----------|
+| `SPRING_PROFILES_ACTIVE` | Spring profile | `prod` | Yes |
+| `MONGODB_URI` | MongoDB connection string with SSL and retry parameters | `mongodb+srv://user:pass@cluster.mongodb.net/db?retryWrites=true&w=majority&ssl=true` | Yes |
+| `MONGODB_DATABASE` | Database name | `finance_tracker` | No (defaults to finance_tracker) |
+| `SERVER_PORT` | Server port | `8080` | No (defaults to 8080) |
 
-**Note:** Render automatically sets `PORT` environment variable. The application is configured to use `SERVER_PORT` first, then fallback to `PORT`.
+**Important Notes:**
+
+1. **MongoDB Connection String Format:**
+   - Must use `mongodb+srv://` protocol for MongoDB Atlas
+   - Must include `retryWrites=true` for write retry
+   - Must include `w=majority` for write concern
+   - Must include `ssl=true` for SSL/TLS encryption
+   - Full format: `mongodb+srv://username:password@cluster.mongodb.net/database?retryWrites=true&w=majority&ssl=true`
+
+2. **Port Configuration:**
+   - Render automatically sets `PORT` environment variable
+   - The application is configured to use `SERVER_PORT` first, then fallback to `PORT`
+   - Default port is 8080 if neither is set
+
+3. **MongoDB Atlas Network Access:**
+   - **Critical:** You must configure Network Access in MongoDB Atlas
+   - Whitelist IP address `0.0.0.0/0` to allow connections from Render
+   - See "MongoDB Atlas Network Access Setup" section below for detailed instructions
 
 ### Render Deployment Features
 
@@ -476,6 +493,67 @@ Required environment variables in Render:
 - **SSL:** Automatic HTTPS/SSL certificates
 - **Custom Domain:** Add your custom domain
 
+### MongoDB Atlas Network Access Setup
+
+**Critical:** MongoDB Atlas requires network access configuration to allow connections from Render.
+
+#### Step 1: Configure Network Access in MongoDB Atlas
+
+1. **Log in to MongoDB Atlas:**
+   - Go to https://cloud.mongodb.com/
+   - Navigate to your cluster
+
+2. **Configure Network Access:**
+   - Go to **Network Access** in the left sidebar
+   - Click **Add IP Address**
+   - For Render deployment, you have two options:
+
+   **Option A: Allow All IPs (Quick Setup - Development)**
+   - Click **Allow Access from Anywhere**
+   - IP Address: `0.0.0.0/0`
+   - Comment: "Render deployment"
+   - Click **Confirm**
+
+   **Option B: Allow Specific IPs (Recommended for Production)**
+   - Render uses dynamic IPs, so you may need to:
+     - Allow `0.0.0.0/0` temporarily to test
+     - Or use MongoDB Atlas VPC peering (advanced)
+     - Or use MongoDB Atlas Private Endpoint (advanced)
+
+3. **Verify Database User:**
+   - Go to **Database Access**
+   - Ensure your database user has proper permissions
+   - User should have read/write access to the database
+
+#### Step 2: Verify Connection String
+
+Your MongoDB connection string should include:
+
+```
+mongodb+srv://username:password@cluster.mongodb.net/database?retryWrites=true&w=majority&ssl=true
+```
+
+**Required Parameters:**
+- `retryWrites=true` - Enable retry for write operations
+- `w=majority` - Write concern for durability
+- `ssl=true` - Enable SSL/TLS (required for Atlas)
+
+**Example:**
+```
+MONGODB_URI=mongodb+srv://financeAdmin:password@financecluster.6xj5m8y.mongodb.net/finance_tracker?retryWrites=true&w=majority&ssl=true
+```
+
+#### Step 3: Set Environment Variables in Render
+
+In Render Dashboard, set these environment variables:
+
+```
+SPRING_PROFILES_ACTIVE=prod
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/database?retryWrites=true&w=majority&ssl=true
+MONGODB_DATABASE=finance_tracker
+SERVER_PORT=8080
+```
+
 ### Troubleshooting Render Deployment
 
 1. **Build Fails:**
@@ -485,13 +563,44 @@ Required environment variables in Render:
 
 2. **Application Won't Start:**
    - Verify environment variables are set correctly
-   - Check MongoDB connection string
-   - Review application logs
+   - Check MongoDB connection string format
+   - Review application logs in Render dashboard
+   - Verify MongoDB Atlas Network Access is configured
 
-3. **Health Check Fails:**
+3. **MongoDB Connection Errors:**
+   
+   **Error: "Timed out after 30000 ms" or "SSL Exception"**
+   - **Solution:** Configure MongoDB Atlas Network Access (see above)
+   - Verify connection string includes `ssl=true` and `retryWrites=true`
+   - Check that IP address `0.0.0.0/0` is whitelisted in MongoDB Atlas
+   - Verify database user credentials are correct
+   - Check MongoDB Atlas cluster status (ensure it's running)
+
+   **Error: "Mongock connection failed" or "UnsatisfiedDependencyException: Error creating bean with name 'getBuilder'"**
+   - **Solution:** This error indicates MongoDB connection failure during Mongock initialization
+   - Mongock uses the same MongoDB connection as the application
+   - Verify MongoDB connection configuration:
+     - Check MongoDB Atlas Network Access is configured (whitelist IP addresses - see setup guide above)
+     - Verify connection string includes `ssl=true&retryWrites=true&w=majority`
+     - Check database user credentials are correct
+     - Verify MongoDB connection pool settings in application-prod.properties
+   - Connection timeouts are configured to 60 seconds (connect-timeout-ms, socket-timeout-ms)
+   - If connection takes longer, increase timeout values in application-prod.properties:
+     ```properties
+     spring.data.mongodb.option.connect-timeout-ms=90000
+     spring.data.mongodb.option.socket-timeout-ms=90000
+     ```
+
+   **Error: "Authentication failed"**
+   - **Solution:** Verify database user credentials in MongoDB Atlas
+   - Check username and password in connection string
+   - Ensure database user has proper permissions
+
+4. **Health Check Fails:**
    - Verify actuator endpoints are enabled
    - Check if application is listening on correct port
    - Ensure MongoDB is accessible
+   - Check application logs for errors
 
 ## Building for Production
 

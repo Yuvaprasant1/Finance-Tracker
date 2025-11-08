@@ -47,17 +47,32 @@ The application will open at `http://localhost:3000` in your browser.
 
 ### Environment Variables
 
-Create a `.env` file in the `frontend-web` directory for environment-specific configuration:
+The application uses environment variables to configure the backend API URL. The API service automatically reads from `REACT_APP_API_BASE_URL` environment variable.
 
-```env
-REACT_APP_API_BASE_URL=http://localhost:8080/finance-tracker/api/v1
-```
+#### Environment Files
 
-Update `api.service.ts` to use the environment variable:
+The project includes example environment files:
+- `.env.example` - Template for environment variables
+- `.env.development` - Development environment variables
+- `.env.production` - Production environment variables
 
-```typescript
-constructor(baseURL: string = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080/finance-tracker/api/v1')
-```
+#### Setting Up Environment Variables
+
+1. **For Local Development:**
+   - Copy `.env.example` to `.env`:
+     ```bash
+     cp .env.example .env
+     ```
+   - Or create `.env` manually with:
+     ```env
+     REACT_APP_API_BASE_URL=http://localhost:8080/finance-tracker/api/v1
+     ```
+
+2. **For Production:**
+   - Set `REACT_APP_API_BASE_URL` in your deployment platform (Render, Vercel, Netlify, etc.)
+   - Or update `.env.production` before building
+
+**Important:** Environment variables must be prefixed with `REACT_APP_` to be accessible in React applications. They are embedded at build time, so you need to rebuild if you change them.
 
 ## Running the Application
 
@@ -191,22 +206,165 @@ npm run build
 
 This creates an optimized production build in the `build` folder.
 
-### Deploy
-
-The `build` folder contains static files that can be deployed to:
-- **Netlify** - Drag and drop the `build` folder
-- **Vercel** - Connect your Git repository
-- **AWS S3** - Upload `build` folder contents
-- **Nginx** - Serve the `build` folder
-- **Apache** - Serve the `build` folder
-
 ### Environment Configuration
 
-For production, set environment variables:
+The application uses environment variables to configure the backend API URL. Environment variables must be prefixed with `REACT_APP_` to be accessible in the React application.
+
+#### Development Environment
+
+For local development, create a `.env` file (or use `.env.development`):
+
+```env
+REACT_APP_API_BASE_URL=http://localhost:8080/finance-tracker/api/v1
+```
+
+#### Production Environment
+
+For production builds, set the environment variable before building:
 
 ```bash
-REACT_APP_API_BASE_URL=https://your-api-domain.com/finance-tracker/api/v1
+REACT_APP_API_BASE_URL=https://your-backend-domain.com/finance-tracker/api/v1 npm run build
 ```
+
+Or create a `.env.production` file:
+
+```env
+REACT_APP_API_BASE_URL=https://your-backend-domain.com/finance-tracker/api/v1
+```
+
+**Note:** Environment variables are embedded at build time in React applications. You need to rebuild the application if you change environment variables.
+
+## Deployment
+
+### Deployment on Render
+
+#### Prerequisites
+
+1. GitHub repository with your code
+2. Render account (sign up at https://render.com)
+3. Backend API deployed on Render (see [Backend README](../backend/README.md))
+
+#### Deployment Steps
+
+##### Option 1: Using Render Blueprint (Recommended)
+
+1. **Connect Repository to Render:**
+   - Go to Render Dashboard
+   - Click "New +" → "Blueprint"
+   - Connect your GitHub repository
+   - Render will detect `render.yaml` and create services automatically
+
+2. **Configure Environment Variables:**
+   - After services are created, go to the frontend service settings
+   - Navigate to "Environment" section
+   - Add the following environment variable:
+     ```
+     REACT_APP_API_BASE_URL=https://your-backend-service-name.onrender.com/finance-tracker/api/v1
+     ```
+   - Replace `your-backend-service-name` with your actual backend service name
+   - Example: `https://finance-tracker-backend.onrender.com/finance-tracker/api/v1`
+
+3. **Deploy:**
+   - Render will automatically build and deploy
+   - Monitor the build logs
+   - Service will be available at `https://your-frontend-service-name.onrender.com`
+
+##### Option 2: Manual Service Creation
+
+1. **Create Static Site Service:**
+   - Go to Render Dashboard
+   - Click "New +" → "Static Site"
+   - Connect your GitHub repository
+   - Select the repository and branch
+
+2. **Configure Service:**
+   - **Name:** finance-tracker-frontend
+   - **Build Command:** `cd frontend-web && npm install && npm run build`
+   - **Publish Directory:** `frontend-web/build`
+   - **Plan:** Free (or upgrade for production)
+   - **Region:** Choose your preferred region (should match backend region)
+
+3. **Set Environment Variables:**
+   - In the "Environment" section, add:
+     ```
+     REACT_APP_API_BASE_URL=https://your-backend-service-name.onrender.com/finance-tracker/api/v1
+     ```
+   - Replace with your actual backend URL
+
+4. **Configure Redirects (for React Router):**
+   - Go to "Redirects/Rewrites" section
+   - Add a rewrite rule:
+     - **Source:** `/*`
+     - **Destination:** `/index.html`
+   - This ensures client-side routing works correctly
+
+5. **Deploy:**
+   - Click "Create Static Site"
+   - Render will build and deploy automatically
+   - Monitor the build logs
+
+##### Option 3: Docker Deployment (Advanced)
+
+If you prefer Docker deployment with nginx:
+
+1. **Create Web Service:**
+   - Go to Render Dashboard
+   - Click "New +" → "Web Service"
+   - Connect your GitHub repository
+   - Select the repository and branch
+
+2. **Configure Service:**
+   - **Name:** finance-tracker-frontend
+   - **Environment:** Docker
+   - **Dockerfile Path:** `./frontend-web/Dockerfile`
+   - **Docker Context:** `./frontend-web`
+   - **Plan:** Free (or upgrade for production)
+   - **Region:** Choose your preferred region
+
+3. **Set Environment Variables:**
+   - `REACT_APP_API_BASE_URL=https://your-backend-service-name.onrender.com/finance-tracker/api/v1`
+
+4. **Deploy:**
+   - Click "Create Web Service"
+   - Render will build and deploy automatically
+
+#### Render Environment Variables
+
+| Variable | Description | Example | Required |
+|----------|-------------|---------|----------|
+| `REACT_APP_API_BASE_URL` | Backend API base URL | `https://finance-tracker-backend.onrender.com/finance-tracker/api/v1` | Yes |
+
+**Important Notes:**
+1. **Backend URL:** Make sure your backend is deployed and accessible before deploying the frontend
+2. **HTTPS:** Use HTTPS URLs for production (Render provides HTTPS automatically)
+3. **CORS:** Ensure your backend CORS configuration allows requests from your frontend domain
+4. **Build Time:** Environment variables are embedded at build time, so changes require a rebuild
+
+#### Render Deployment Configuration
+
+**Build Settings:**
+- **Build Command:** `cd frontend-web && npm install && npm run build`
+- **Publish Directory:** `frontend-web/build`
+- **Environment Variables:** Set `REACT_APP_API_BASE_URL` in Render dashboard
+
+**Static Site Features:**
+- **Auto-deploy:** Automatically deploys on git push to main branch
+- **Logs:** View application logs in Render dashboard
+- **SSL:** Automatic HTTPS/SSL certificates
+- **Custom Domain:** Add your custom domain
+- **SPA Routing:** Configured for React Router client-side routing
+- **Fast Builds:** Static site deployment is faster than Docker builds
+
+### Other Deployment Options
+
+The `build` folder contains static files that can be deployed to:
+- **Netlify** - Drag and drop the `build` folder or connect Git repository
+- **Vercel** - Connect your Git repository
+- **AWS S3 + CloudFront** - Upload `build` folder contents to S3 and serve via CloudFront
+- **Nginx** - Serve the `build` folder using nginx
+- **Apache** - Serve the `build` folder using Apache
+
+**Note:** For other platforms, make sure to set the `REACT_APP_API_BASE_URL` environment variable during the build process.
 
 ## Available Scripts
 

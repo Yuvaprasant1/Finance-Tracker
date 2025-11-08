@@ -13,9 +13,15 @@ export class ApiService {
     stopLoading: () => void;
   } | null = null;
 
-  constructor(baseURL: string = 'http://localhost:8080/finance-tracker/api/v1') {
+  constructor(baseURL?: string) {
+    // Use environment variable if available, otherwise fallback to default
+    // REACT_APP_API_BASE_URL should be set in .env files or build environment
+    const apiBaseURL = baseURL || 
+      process.env.REACT_APP_API_BASE_URL || 
+      'http://localhost:8080/finance-tracker/api/v1';
+    
     this.api = axios.create({
-      baseURL,
+      baseURL: apiBaseURL,
       headers: {
         'Content-Type': 'application/json',
       },

@@ -88,10 +88,63 @@ Finance-Tracker/
 
 4. Frontend will be available at `http://localhost:3000`
 
+## Deployment
+
+### Deploy on Render
+
+This project includes a `render.yaml` blueprint for easy deployment on Render.
+
+#### Prerequisites
+
+1. GitHub repository with your code
+2. Render account (sign up at https://render.com)
+3. MongoDB Atlas database (or other MongoDB instance)
+
+#### Quick Deployment
+
+1. **Connect Repository to Render:**
+   - Go to Render Dashboard
+   - Click "New +" → "Blueprint"
+   - Connect your GitHub repository
+   - Render will detect `render.yaml` and create services automatically
+
+2. **Configure Environment Variables:**
+   
+   **Backend Service:**
+   - `SPRING_PROFILES_ACTIVE=prod`
+   - `MONGODB_URI=your-mongodb-connection-string` (required)
+   - `MONGODB_DATABASE=finance_tracker` (optional)
+   - `SERVER_PORT=8080` (optional)
+
+   **Frontend Service:**
+   - `REACT_APP_API_BASE_URL=https://your-backend-service-name.onrender.com/finance-tracker/api/v1` (required)
+   - Replace `your-backend-service-name` with your actual backend service name
+   - **Build Command:** `cd frontend-web && npm install && npm run build`
+   - **Publish Directory:** `frontend-web/build`
+
+3. **Deploy:**
+   - Render will automatically build and deploy both services
+   - Monitor the build logs
+   - Services will be available at:
+     - Backend: `https://your-backend-service-name.onrender.com`
+     - Frontend: `https://your-frontend-service-name.onrender.com`
+
+#### Detailed Deployment Guides
+
+- [Backend Deployment Guide](backend/README.md#deployment-on-render) - Complete backend deployment instructions
+- [Frontend Deployment Guide](frontend-web/README.md#deployment-on-render) - Complete frontend deployment instructions
+
+#### Important Notes
+
+1. **MongoDB Atlas:** Configure network access to allow connections from Render (IP: `0.0.0.0/0` or specific Render IPs)
+2. **Environment Variables:** Set sensitive variables in Render dashboard, not in `render.yaml`
+3. **Backend First:** Deploy backend first, then use its URL for frontend configuration
+4. **CORS:** Ensure backend CORS configuration allows requests from frontend domain
+
 ## Documentation
 
-- [Backend README](backend/README.md) - Backend API documentation
-- [Frontend README](frontend-web/README.md) - Frontend application documentation
+- [Backend README](backend/README.md) - Backend API documentation and deployment guide
+- [Frontend README](frontend-web/README.md) - Frontend application documentation and deployment guide
 
 ## License
 
