@@ -786,6 +786,60 @@ gcloud run deploy finance-service \
   --set-env-vars WEB_CLIENT_ID=your-google-client-id
 ```
 
+### Viewing Build and Runtime Logs
+
+#### During Build (Cloud Build)
+
+View Cloud Build logs:
+```bash
+gcloud builds list --limit=5
+gcloud builds log BUILD_ID
+```
+
+Or view in Google Cloud Console:
+- Navigate to **Cloud Build** → **History**
+- Click on a build to see detailed logs
+
+#### Runtime Logs (Cloud Run)
+
+View Cloud Run application logs:
+```bash
+# Stream logs in real-time
+gcloud run services logs tail finance-service --region asia-south1
+
+# View recent logs
+gcloud run services logs read finance-service --region asia-south1 --limit 100
+
+# View logs with specific format
+gcloud run services logs read finance-service \
+  --region asia-south1 \
+  --limit 50 \
+  --format="table(timestamp,severity,textPayload)"
+```
+
+Or view in Google Cloud Console:
+- Navigate to **Cloud Run** → **finance-service** → **Logs** tab
+
+#### GitHub Actions Logs
+
+- Go to your GitHub repository
+- Navigate to **Actions** tab
+- Click on the workflow run to see detailed build and deployment logs
+- Each step shows verbose output including:
+  - Gradle build progress
+  - Docker build progress
+  - Cloud Build submission
+  - Cloud Run deployment status
+  - Recent application logs
+
+#### Debugging Build Issues
+
+If build fails, check:
+1. **Gradle Build Logs**: Look for compilation errors in the "Build JAR with Gradle" step
+2. **Docker Build Logs**: Check Dockerfile execution in Cloud Build logs
+3. **Cloud Run Deployment**: Verify service deployment in the "Deploy to Cloud Run" step
+4. **Application Startup**: Check Cloud Run logs for runtime errors
+
 ### Project Structure
 
 ```
@@ -797,9 +851,9 @@ backend/
 │   │       └── application.properties
 ├── build.gradle              # Gradle build configuration (Java 17, Spring Boot)
 ├── settings.gradle           # Gradle settings
-├── Dockerfile                # Multi-stage Docker build
+├── Dockerfile                # Multi-stage Docker build with verbose logging
 ├── .dockerignore             # Docker ignore patterns
-└── cloudbuild.yaml           # Cloud Build configuration
+└── cloudbuild.yaml           # Cloud Build configuration with detailed logging
 ```
 
 ## Environment Variables Setup

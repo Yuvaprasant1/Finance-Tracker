@@ -3,11 +3,13 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
+      - '--progress=plain'
       - '-t'
       - 'asia-south1-docker.pkg.dev/$PROJECT_ID/auto/finance-service:$SHORT_SHA'
       - '-t'
       - 'asia-south1-docker.pkg.dev/$PROJECT_ID/auto/finance-service:latest'
       - '.'
+    id: 'build-image'
 
   # Push to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
@@ -15,6 +17,8 @@ steps:
       - 'push'
       - '--all-tags'
       - 'asia-south1-docker.pkg.dev/$PROJECT_ID/auto/finance-service'
+    id: 'push-image'
+    waitFor: ['build-image']
 
   # Deploy to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -30,6 +34,9 @@ steps:
       - '--platform'
       - 'managed'
       - '--allow-unauthenticated'
+      - '--log-level=debug'
+    id: 'deploy-service'
+    waitFor: ['push-image']
 
 images:
   - 'asia-south1-docker.pkg.dev/$PROJECT_ID/auto/finance-service:$SHORT_SHA'
@@ -38,4 +45,10 @@ images:
 options:
   logging: CLOUD_LOGGING_ONLY
   machineType: 'E2_HIGHCPU_8'
+  env:
+    - 'GRADLE_OPTS=-Dorg.gradle.daemon=false -Dorg.gradle.parallel=false'
+
+substitutions:
+  _SERVICE_NAME: 'finance-service'
+  _REGION: 'asia-south1'
 

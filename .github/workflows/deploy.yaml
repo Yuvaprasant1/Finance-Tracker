@@ -35,7 +35,11 @@ jobs:
         working-directory: ./backend
         run: |
           chmod +x ./gradlew
-          ./gradlew clean build -x test
+          echo "=== Starting Gradle Build ==="
+          ./gradlew clean build -x test --info --stacktrace
+          echo "=== Build Complete ==="
+          ls -lh build/libs/
+          echo "=== JAR Files ==="
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -52,7 +56,32 @@ jobs:
       - name: Submit build to Cloud Build
         working-directory: ./backend
         run: |
+          echo "=== Submitting to Cloud Build ==="
           gcloud builds submit \
             --config cloudbuild.yaml \
-            --substitutions SHORT_SHA=${{ github.sha }}
+            --substitutions SHORT_SHA=${{ github.sha }} \
+            --verbosity=debug
+          
+      - name: Get Cloud Run Service URL
+        run: |
+          echo "=== Cloud Run Service Info ==="
+          gcloud run services describe finance-service \
+            --region asia-south1 \
+            --format="value(status.url)" && \
+          echo "=== Service URL Retrieved ==="
+          
+      - name: View Cloud Run Logs
+        run: |
+          echo "=== Recent Cloud Run Logs ==="
+          gcloud run services logs read finance-service \
+            --region asia-south1 \
+            --limit 50 \
+            --format="table(timestamp,severity,textPayload)" || echo "Logs not available yet"
+          
+      - name: Check Service Status
+        run: |
+          echo "=== Checking Service Status ==="
+          gcloud run services describe finance-service \
+            --region asia-south1 \
+            --format="table(status.conditions.type,status.conditions.status,status.conditions.message)" || echo "Service status check failed"
 
