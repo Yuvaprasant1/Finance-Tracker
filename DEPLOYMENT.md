@@ -149,9 +149,11 @@ Complete deployment guide for Finance Tracker application on Render.
    - Click "Save Changes"
 
 3. **Configure Redirects (for React Router):**
-   - Go to "Redirects/Rewrites" section
-   - The blueprint should already include a rewrite rule for SPA routing
-   - If not, add: Source `/*` → Destination `/index.html`
+   - The `_redirects` file in `public/` folder will automatically handle routing
+   - If the redirect doesn't work, manually configure in Render dashboard:
+     - Go to "Redirects/Rewrites" section
+     - Add: Source `/*` → Destination `/index.html` (Action: Rewrite)
+   - This ensures all routes (like `/login`, `/dashboard`) serve `index.html`
 
 4. **Deploy:**
    - Render will automatically rebuild and deploy
@@ -178,11 +180,14 @@ Complete deployment guide for Finance Tracker application on Render.
    - Replace with your actual backend URL
 
 4. **Configure Redirects:**
-   - Go to "Redirects/Rewrites" section
-   - Add rewrite rule:
-     - **Source:** `/*`
-     - **Destination:** `/index.html`
-   - This ensures React Router works correctly
+   - The `_redirects` file in `public/` folder should automatically handle this
+   - If redirects don't work automatically, manually configure:
+     - Go to "Redirects/Rewrites" section in Render dashboard
+     - Add rewrite rule:
+       - **Source:** `/*`
+       - **Destination:** `/index.html`
+       - **Action:** Rewrite
+   - This ensures React Router works correctly and fixes 404 errors on page refresh
 
 5. **Deploy:**
    - Click "Create Static Site"
@@ -313,6 +318,32 @@ For production, you may want to restrict CORS to your frontend domain only:
    - Set up alerts if needed
 
 ## Troubleshooting
+
+### Frontend 404 Error on Page Refresh
+
+**Problem:** Getting `404 (Not Found)` error when refreshing pages like `/login`, `/dashboard`, etc.
+
+**Solution:**
+
+1. **Configure Redirect in Render Dashboard (Required for Static Sites):**
+   - Go to your Render dashboard
+   - Select your frontend static site service
+   - Go to **Settings** → **Redirects/Rewrites**
+   - Click **Add Redirect** or **Add Rewrite**
+   - Configure:
+     - **Source Path:** `/*`
+     - **Destination Path:** `/index.html`
+     - **Action:** `Rewrite` (NOT Redirect - this is important!)
+   - Click **Save**
+   - The service will automatically redeploy
+
+2. **Verify Fix:**
+   - After redeployment, test by refreshing any route (e.g., `/login`)
+   - The page should load correctly instead of showing 404
+
+**Note:** The `_redirects` file in `public/` folder is included for compatibility with other platforms, but Render requires manual configuration in the dashboard.
+
+For more troubleshooting help, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 
 ### Backend Issues
 

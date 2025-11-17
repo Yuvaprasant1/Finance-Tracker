@@ -48,7 +48,8 @@ services:
 
   # Frontend Static Site Service
   # Using static site deployment for simpler and faster builds
-  # NOTE: Redirects/rewrites for React Router must be configured in Render dashboard:
+  # NOTE: The _redirects file in public/ folder automatically handles SPA routing
+  # If needed, you can also configure redirects in Render dashboard:
   # Go to Settings → Redirects/Rewrites → Add: Source: /* → Destination: /index.html (Rewrite)
   - type: static_site
     name: finance-tracker-frontend
