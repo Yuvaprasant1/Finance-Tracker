@@ -12,8 +12,6 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
-
 @Repository
 public interface TransactionRepository extends MongoRepository<FinancialTransaction, String> {
     
@@ -31,13 +29,13 @@ public interface TransactionRepository extends MongoRepository<FinancialTransact
     
     @Query("{ 'user_id.$id': ?0, 'date': { $gte: ?1, $lte: ?2 } }")
     List<FinancialTransaction> findTransactionsByUserAndDateRange(
-        UUID userId, 
+        String userId, 
         LocalDateTime startDate, 
         LocalDateTime endDate
     );
     
     @Query("{ '_id': ?0, 'user_id.$id': ?1 }")
-    Optional<FinancialTransaction> findByIdAndUser(String id, UUID userId);
+    Optional<FinancialTransaction> findByIdAndUser(String id, String userId);
     
     long countByUser(User user);
     
@@ -45,6 +43,6 @@ public interface TransactionRepository extends MongoRepository<FinancialTransact
         "{ $match: { 'user_id.$id': ?0 } }",
         "{ $group: { _id: null, total: { $sum: '$amount' } } }"
     })
-    double sumAmountByUser(UUID userId);
+    double sumAmountByUser(String userId);
 }
 

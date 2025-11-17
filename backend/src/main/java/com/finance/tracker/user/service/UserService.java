@@ -1,6 +1,5 @@
 package com.finance.tracker.user.service;
 
-import com.finance.tracker.user.dto.LoginResponseDTO;
 import com.finance.tracker.user.dto.UpdateUserProfileRequestDTO;
 import com.finance.tracker.user.dto.UserProfileDTO;
 import com.finance.tracker.user.entity.User;
@@ -13,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
-import java.util.UUID;
 
 /**
  * Unified service for User operations.
@@ -25,30 +23,7 @@ public class UserService {
     
     private final UserProfileRepository userProfileRepository;
     private final UserProfileMapper userProfileMapper;
-    
-    // ========== Login Operations ==========
-    
-    /**
-     * Login with phone number. Generates UUID on backend and creates user if not exists.
-     * Returns user data with generated UUID.
-     */
-    @Transactional
-    public LoginResponseDTO login(String phoneNumber) {
-        Optional<User> existingUser = userProfileRepository.findByPhoneNumber(phoneNumber);
-        
-        User user;
-        if (existingUser.isPresent()) {
-            user = existingUser.get();
-        } else {
-            // Create new user with generated UUID
-            user = new User(phoneNumber);
-            user.setId(UUID.randomUUID());
-            user = userProfileRepository.save(user);
-        }
-        
-        return userProfileMapper.toLoginResponseDTO(user);
-    }
-    
+
     // ========== User Profile Operations ==========
     
     /**
@@ -56,7 +31,7 @@ public class UserService {
      */
     @Transactional
     public UserProfileDTO getUserProfile(String userId) {
-        User user = userProfileRepository.findById(UUID.fromString(userId))
+        User user = userProfileRepository.findById(userId)
                 .orElseThrow(() -> UserNotFoundException.byId(userId));
         return userProfileMapper.toDTO(user);
     }
@@ -65,7 +40,7 @@ public class UserService {
      */
     @Transactional
     public UserProfileDTO updateUserProfile(String userId, UpdateUserProfileRequestDTO requestDTO) {
-        User user = userProfileRepository.findById(UUID.fromString(userId))
+        User user = userProfileRepository.findById(userId)
                 .orElseThrow(() -> UserNotFoundException.byId(userId));
         // Only allow currency change if user has no expenses
         if (requestDTO.getCurrency() != null) {
@@ -83,8 +58,44 @@ public class UserService {
      * Get user by ID. Used by ExpenseService.
      */
     public User getUserById(String userId) {
-        return userProfileRepository.findById(UUID.fromString(userId))
+        return userProfileRepository.findById(userId)
                 .orElseThrow(() -> UserNotFoundException.byId(userId));
+    }
+    
+    /**
+     * Create user if not exists, or return existing user's ID.
+     * Uses Firebase UID as the primary key (String).
+     * 
+     * @param firebaseUid Firebase UID string (stored directly as String)
+     * @param email User email address
+     * @param name User display name (optional, defaults to email prefix if null)
+     * @return User ID as String (Firebase UID) of the user (existing or newly created)
+     */
+    @Transactional
+    public String createUserIfNotExists(String firebaseUid, String email, String name) {
+        // First, check if user already exists by Firebase UID
+        Optional<User> existingUser = userProfileRepository.findById(firebaseUid);
+        if (existingUser.isPresent()) {
+            return existingUser.get().getId();
+        }
+        
+        // Also check by email as fallback
+        Optional<User> existingByEmail = userProfileRepository.findByEmail(email);
+        if (existingByEmail.isPresent()) {
+            return existingByEmail.get().getId();
+        }
+        
+        // User doesn't exist, create new user
+        User newUser = new User();
+        newUser.setId(firebaseUid); // Use Firebase UID directly as String
+        newUser.setEmail(email);
+        newUser.setName(name != null && !name.isBlank() ? name : (email != null ? email.split("@")[0] : "User"));
+        newUser.setCurrency("INR"); // Default currency
+        newUser.setIsActive(true);
+        newUser.setEmailVerified(true); // Google SSO means email is verified
+        
+        User savedUser = userProfileRepository.save(newUser);
+        return savedUser.getId();
     }
 }
 

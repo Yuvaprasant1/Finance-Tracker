@@ -7,8 +7,6 @@ import com.finance.tracker.user.dto.UserProfileDTO;
 import com.finance.tracker.user.entity.User;
 import org.springframework.stereotype.Component;
 
-import java.util.UUID;
-
 @Component
 public class UserProfileMapper {
     
@@ -18,7 +16,7 @@ public class UserProfileMapper {
         }
         
         UserProfileDTO dto = new UserProfileDTO();
-        dto.setId(user.getId() != null ? user.getId().toString() : null);
+        dto.setId(user.getId());
         dto.setPhoneNumber(user.getPhoneNumber());
         dto.setName(user.getName());
         dto.setEmail(user.getEmail());
@@ -37,7 +35,7 @@ public class UserProfileMapper {
         }
         
         LoginResponseDTO dto = new LoginResponseDTO();
-        dto.setUserId(user.getId() != null ? user.getId().toString() : null);
+        dto.setUserId(user.getId());
         dto.setPhoneNumber(user.getPhoneNumber());
         dto.setName(user.getName());
         dto.setEmail(user.getEmail());
@@ -69,7 +67,7 @@ public class UserProfileMapper {
         
         User user = new User();
         if (userId != null && !userId.isEmpty()) {
-            user.setId(UUID.fromString(userId));
+            user.setId(userId);
         }
         user.setName(dto.getName());
         user.setEmail(dto.getEmail());

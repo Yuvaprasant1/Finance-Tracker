@@ -13,7 +13,7 @@ public class UserMapper {
         }
         
         UserDTO dto = new UserDTO();
-        dto.setId(user.getId().toString());
+        dto.setId(user.getId());
         dto.setPhoneNumber(user.getPhoneNumber());
         dto.setIsActive(user.getIsActive());
         dto.setCreatedAt(user.getCreatedAt());

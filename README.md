@@ -145,6 +145,8 @@ This project includes a `render.yaml` blueprint for easy deployment on Render.
 
 - [Backend README](backend/README.md) - Backend API documentation and deployment guide
 - [Frontend README](frontend-web/README.md) - Frontend application documentation and deployment guide
+- [Deployment Guide](DEPLOYMENT.md) - Complete deployment instructions
+- [Troubleshooting Guide](TROUBLESHOOTING.md) - Common issues and solutions
 
 ## License
 

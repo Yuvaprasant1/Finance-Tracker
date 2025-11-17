@@ -20,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -52,8 +51,8 @@ public class TransactionService {
     
     public TransactionDTO getTransactionById(String id, String userId) {
         User user = userService.getUserById(userId);
-        UUID userUuid = user.getId();
-        FinancialTransaction transaction = transactionRepository.findByIdAndUser(id, userUuid)
+        String userStringId = user.getId();
+        FinancialTransaction transaction = transactionRepository.findByIdAndUser(id, userStringId)
                 .orElseThrow(() -> TransactionNotFoundException.byIdAndUserId(id, userId));
         return transactionMapper.toDTO(transaction);
     }
@@ -69,8 +68,8 @@ public class TransactionService {
     @Transactional
     public TransactionDTO updateTransaction(String id, UpdateTransactionRequestDTO requestDTO, String userId) {
         User user = userService.getUserById(userId);
-        UUID userUuid = user.getId();
-        FinancialTransaction transaction = transactionRepository.findByIdAndUser(id, userUuid)
+        String userStringId = user.getId();
+        FinancialTransaction transaction = transactionRepository.findByIdAndUser(id, userStringId)
                 .orElseThrow(() -> TransactionNotFoundException.byIdAndUserId(id, userId));
         
         transactionMapper.updateEntity(transaction, requestDTO);
@@ -82,8 +81,8 @@ public class TransactionService {
     @Transactional
     public TransactionDTO deleteTransaction(String id, String userId) {
         User user = userService.getUserById(userId);
-        UUID userUuid = user.getId();
-        FinancialTransaction transaction = transactionRepository.findByIdAndUser(id, userUuid)
+        String userStringId = user.getId();
+        FinancialTransaction transaction = transactionRepository.findByIdAndUser(id, userStringId)
                 .orElseThrow(() -> TransactionNotFoundException.byIdAndUserId(id, userId));
         
         TransactionDTO deletedTransactionDTO = transactionMapper.toDTO(transaction);
@@ -92,8 +91,7 @@ public class TransactionService {
     }
     
     public Double getTotalTransactionsByUserId(String userId) {
-        UUID userUuid = UUID.fromString(userId);
-        return transactionRepository.sumAmountByUser(userUuid);
+        return transactionRepository.sumAmountByUser(userId);
     }
     
     public List<TransactionDTO> getRecentTransactions(String userId, int limit) {

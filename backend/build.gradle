@@ -21,6 +21,8 @@ repositories {
 dependencies {
     // Spring Boot Web
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    // WebClient for calling Firebase Identity Toolkit REST
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
     
     // Spring Boot Data MongoDB
     implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
@@ -30,6 +32,16 @@ dependencies {
     
     // Spring Boot Actuator
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // Firebase Admin SDK
+    implementation 'com.google.firebase:firebase-admin:9.3.0'
+
+    // Google API Client (for Google ID token verification)
+    implementation 'com.google.api-client:google-api-client:2.6.0'
+    implementation 'com.google.http-client:google-http-client-gson:1.43.3'
+
+    // Nimbus JOSE + JWT (for Apple identity token verification)
+    implementation 'com.nimbusds:nimbus-jose-jwt:9.37.3'
     
     // Lombok
     compileOnly 'org.projectlombok:lombok'
