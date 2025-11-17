@@ -610,12 +610,196 @@ SERVER_PORT=8080
 ./gradlew bootJar
 ```
 
-The JAR file will be created at: `build/libs/finance-tracker-1.0.0.jar`
+The JAR file will be created at: `build/libs/app.jar`
 
 ### Run Production JAR
 
 ```bash
-java -jar build/libs/finance-tracker-1.0.0.jar
+java -jar build/libs/app.jar
+```
+
+## Running Locally with Gradle
+
+### Build and Run
+
+```bash
+# Build the application
+./gradlew build
+
+# Run the application
+./gradlew bootRun
+```
+
+On Windows:
+```bash
+gradlew.bat build
+gradlew.bat bootRun
+```
+
+The application will be available at `http://localhost:8080/finance-tracker`
+
+## Continuous Deployment to Google Cloud Run
+
+This project is configured for automated deployment to Google Cloud Run using GitHub Actions and Cloud Build.
+
+### CI/CD Flow
+
+1. **Push to main branch** triggers GitHub Actions workflow
+2. **GitHub Actions** builds the JAR using Gradle
+3. **Cloud Build** builds Docker image and pushes to Artifact Registry
+4. **Cloud Run** automatically deploys the new version
+
+### Prerequisites
+
+1. **Google Cloud Project** with billing enabled
+2. **Artifact Registry** repository created:
+   ```bash
+   gcloud artifacts repositories create auto \
+     --repository-format=docker \
+     --location=asia-south1 \
+     --description="Docker repository for finance-service"
+   ```
+3. **Cloud Run API** enabled:
+   ```bash
+   gcloud services enable run.googleapis.com
+   gcloud services enable cloudbuild.googleapis.com
+   ```
+4. **Service Account** with required permissions:
+   ```bash
+   gcloud iam service-accounts create github-actions-sa \
+     --display-name="GitHub Actions Service Account"
+   
+   gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+     --member="serviceAccount:github-actions-sa@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
+     --role="roles/run.admin"
+   
+   gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+     --member="serviceAccount:github-actions-sa@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
+     --role="roles/artifactregistry.writer"
+   
+   gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+     --member="serviceAccount:github-actions-sa@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
+     --role="roles/cloudbuild.builds.editor"
+   ```
+
+### Setting Up GitHub Secrets
+
+1. **Create Service Account Key:**
+   ```bash
+   gcloud iam service-accounts keys create key.json \
+     --iam-account=github-actions-sa@YOUR_PROJECT_ID.iam.gserviceaccount.com
+   ```
+
+2. **Add GitHub Secrets:**
+   - Go to your GitHub repository
+   - Navigate to **Settings** → **Secrets and variables** → **Actions**
+   - Add the following secrets:
+     - `GCP_PROJECT`: Your Google Cloud Project ID
+     - `GCP_SA_KEY`: Contents of the `key.json` file (copy the entire JSON)
+
+### Manual Deployment using gcloud CLI
+
+#### Prerequisites
+
+1. Install [Google Cloud SDK](https://cloud.google.com/sdk/docs/install)
+2. Authenticate:
+   ```bash
+   gcloud auth login
+   gcloud config set project YOUR_PROJECT_ID
+   ```
+
+#### Build and Deploy
+
+1. **Build the JAR:**
+   ```bash
+   cd backend
+   ./gradlew clean build -x test
+   ```
+
+2. **Build Docker image:**
+   ```bash
+   docker build -t asia-south1-docker.pkg.dev/YOUR_PROJECT_ID/auto/finance-service:latest .
+   ```
+
+3. **Push to Artifact Registry:**
+   ```bash
+   gcloud auth configure-docker asia-south1-docker.pkg.dev
+   docker push asia-south1-docker.pkg.dev/YOUR_PROJECT_ID/auto/finance-service:latest
+   ```
+
+4. **Deploy to Cloud Run:**
+   ```bash
+   gcloud run deploy finance-service \
+     --image asia-south1-docker.pkg.dev/YOUR_PROJECT_ID/auto/finance-service:latest \
+     --region asia-south1 \
+     --platform managed \
+     --allow-unauthenticated \
+     --set-env-vars SPRING_PROFILES_ACTIVE=prod \
+     --set-env-vars MONGODB_URI=your-mongodb-uri \
+     --set-env-vars MONGODB_DATABASE=finance_tracker
+   ```
+
+#### Using Cloud Build
+
+Alternatively, use Cloud Build directly:
+
+```bash
+cd backend
+gcloud builds submit --config cloudbuild.yaml \
+  --substitutions SHORT_SHA=$(git rev-parse --short HEAD)
+```
+
+### Cloud Run Configuration
+
+- **Service Name:** `finance-service`
+- **Region:** `asia-south1`
+- **Platform:** `managed`
+- **Runtime:** Java 17
+- **Port:** 8080
+- **Artifact Registry:** `asia-south1-docker.pkg.dev/$PROJECT_ID/auto/finance-service`
+
+### Environment Variables in Cloud Run
+
+Set the following environment variables in Cloud Run:
+
+```bash
+gcloud run services update finance-service \
+  --region asia-south1 \
+  --set-env-vars SPRING_PROFILES_ACTIVE=prod \
+  --set-env-vars MONGODB_URI=your-mongodb-connection-string \
+  --set-env-vars MONGODB_DATABASE=finance_tracker \
+  --set-env-vars FIREBASE_CREDENTIALS_BASE64=your-base64-encoded-credentials \
+  --set-env-vars WEB_CLIENT_ID=your-google-client-id
+```
+
+Or set them during initial deployment:
+
+```bash
+gcloud run deploy finance-service \
+  --image asia-south1-docker.pkg.dev/YOUR_PROJECT_ID/auto/finance-service:latest \
+  --region asia-south1 \
+  --platform managed \
+  --set-env-vars SPRING_PROFILES_ACTIVE=prod \
+  --set-env-vars MONGODB_URI=your-mongodb-uri \
+  --set-env-vars MONGODB_DATABASE=finance_tracker \
+  --set-env-vars FIREBASE_CREDENTIALS_BASE64=your-base64-encoded-credentials \
+  --set-env-vars WEB_CLIENT_ID=your-google-client-id
+```
+
+### Project Structure
+
+```
+backend/
+├── src/
+│   ├── main/
+│   │   ├── java/...          # Spring Boot application source
+│   │   └── resources/
+│   │       └── application.properties
+├── build.gradle              # Gradle build configuration (Java 17, Spring Boot)
+├── settings.gradle           # Gradle settings
+├── Dockerfile                # Multi-stage Docker build
+├── .dockerignore             # Docker ignore patterns
+└── cloudbuild.yaml           # Cloud Build configuration
 ```
 
 ## Environment Variables Setup
