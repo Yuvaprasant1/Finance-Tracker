@@ -1,40 +1,41 @@
 import React, { useState, FormEvent, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
-import { expenseService } from './expense.service';
+import { transactionDetailsService } from './transactionDetails.service';
 import { TransactionDTO, TransactionType } from '../transaction/types';
 import CustomDatePicker from '../../components/DatePicker/DatePicker';
-import { getCurrentDate } from '../../utils/dateUtils';
+import CategoryDropdown from '../category/CategoryDropdown';
+import { getCurrentDate, formatDateToISO } from '../../utils/dateUtils';
 import { PlusCircle, DollarSign, FileText, Tag, Calendar, Save, X, IndianRupee, Edit, Receipt, ArrowUpDown } from 'lucide-react';
-import './Expense.css';
+import './TransactionDetails.css';
 
 /**
  * Component Mode Enum
- * Defines the operational mode of the Expense component
+ * Defines the operational mode of the Transaction Details component
  */
-export enum ExpenseMode {
+export enum TransactionDetailsMode {
   CREATE = 'CREATE',
   EDIT = 'EDIT',
   VIEW = 'VIEW'
 }
 
 /**
- * Expense Component Props
+ * Transaction Details Component Props
  */
-export interface ExpenseProps {
-  mode?: ExpenseMode;
+export interface TransactionDetailsProps {
+  mode?: TransactionDetailsMode;
   expense?: TransactionDTO;
   onClose?: () => void;
   isModal?: boolean;
-  onSaveSuccess?: (updatedExpense?: TransactionDTO) => void;
+  onSaveSuccess?: (updatedTransaction?: TransactionDTO) => void;
   onCancelEdit?: () => void;
 }
 
 /**
- * Expense Component
- * Handles creating, editing, and viewing expenses with clear mode separation
+ * Transaction Details Component
+ * Handles creating, editing, and viewing transaction details with clear mode separation
  */
-const Expense: React.FC<ExpenseProps> = ({ mode: propMode, expense: propExpense, onClose, isModal = false, onSaveSuccess, onCancelEdit }) => {
+const TransactionDetails: React.FC<TransactionDetailsProps> = ({ mode: propMode, expense: propExpense, onClose, isModal = false, onSaveSuccess, onCancelEdit }) => {
   const { userId } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
@@ -42,13 +43,13 @@ const Expense: React.FC<ExpenseProps> = ({ mode: propMode, expense: propExpense,
   // ========== Mode Detection ==========
   // If props are provided, use them; otherwise, detect from location state
   const editData = location.state as { expense: TransactionDTO; isEdit: boolean } | null;
-  const mode: ExpenseMode = useMemo(() => {
+  const mode: TransactionDetailsMode = useMemo(() => {
     if (propMode) return propMode;
-    if (editData?.isEdit && editData?.expense) return ExpenseMode.EDIT;
-    return ExpenseMode.CREATE;
+    if (editData?.isEdit && editData?.expense) return TransactionDetailsMode.EDIT;
+    return TransactionDetailsMode.CREATE;
   }, [propMode, editData]);
   
-  const expenseToEdit = propExpense || editData?.expense;
+  const transactionToEdit = propExpense || editData?.expense;
 
   // ========== Form State ==========
   const [amount, setAmount] = useState<string>('');
@@ -60,12 +61,12 @@ const Expense: React.FC<ExpenseProps> = ({ mode: propMode, expense: propExpense,
 
   // ========== Initialize Form Based on Mode ==========
   useEffect(() => {
-    if ((mode === ExpenseMode.EDIT || mode === ExpenseMode.VIEW) && expenseToEdit) {
-      initializeEditMode(expenseToEdit);
-    } else if (mode === ExpenseMode.CREATE) {
+    if ((mode === TransactionDetailsMode.EDIT || mode === TransactionDetailsMode.VIEW) && transactionToEdit) {
+      initializeEditMode(transactionToEdit);
+    } else if (mode === TransactionDetailsMode.CREATE) {
       initializeCreateMode();
     }
-  }, [mode, expenseToEdit]);
+  }, [mode, transactionToEdit]);
 
   /**
    * Initialize form fields for CREATE mode
@@ -81,15 +82,28 @@ const Expense: React.FC<ExpenseProps> = ({ mode: propMode, expense: propExpense,
   /**
    * Initialize form fields for EDIT mode
    */
-  const initializeEditMode = (expense: TransactionDTO): void => {
-    const formattedAmount = expense.amount 
-      ? parseFloat(expense.amount.toString()).toFixed(2)
+  const initializeEditMode = (transaction: TransactionDTO): void => {
+    const formattedAmount = transaction.amount 
+      ? parseFloat(transaction.amount.toString()).toFixed(2)
       : '';
     setAmount(formattedAmount);
-    setDescription(expense.description || '');
-    setCategory(expense.category || '');
-    setDate(expense.date ? new Date(expense.date) : getCurrentDate());
-    setTransactionType(expense.transactionType ?? TransactionType.EXPENSE);
+    setDescription(transaction.description || '');
+    setCategory(transaction.category || '');
+    // Parse date - backend returns LocalDate (YYYY-MM-DD format)
+    if (transaction.date) {
+      const dateStr = typeof transaction.date === 'string' ? transaction.date : String(transaction.date);
+      // Handle both YYYY-MM-DD format and ISO datetime format
+      if (dateStr.includes('T')) {
+        setDate(new Date(dateStr));
+      } else {
+        // Parse YYYY-MM-DD format
+        const [year, month, day] = dateStr.split('-').map(Number);
+        setDate(new Date(year, month - 1, day));
+      }
+    } else {
+      setDate(getCurrentDate());
+    }
+    setTransactionType(transaction.transactionType ?? TransactionType.EXPENSE);
   };
 
   // ========== Form Validation ==========
@@ -111,9 +125,9 @@ const Expense: React.FC<ExpenseProps> = ({ mode: propMode, expense: propExpense,
 
   // ========== Submit Handlers ==========
   /**
-   * Handle CREATE expense submission
+   * Handle CREATE transaction submission
    */
-  const handleCreateExpense = async (expenseData: {
+  const handleCreateTransaction = async (transactionData: {
     userId: string;
     amount: number;
     description?: string;
@@ -121,14 +135,14 @@ const Expense: React.FC<ExpenseProps> = ({ mode: propMode, expense: propExpense,
     date: string;
     transactionType: TransactionType;
   }): Promise<void> => {
-    await expenseService.createExpense(expenseData);
-    alert('Expense added successfully');
+    await transactionDetailsService.createTransaction(transactionData);
+    alert('Transaction added successfully');
   };
 
   /**
-   * Handle EDIT expense submission
+   * Handle EDIT transaction submission
    */
-  const handleUpdateExpense = async (expenseData: {
+  const handleUpdateTransaction = async (transactionData: {
     userId: string;
     amount: number;
     description?: string;
@@ -136,12 +150,12 @@ const Expense: React.FC<ExpenseProps> = ({ mode: propMode, expense: propExpense,
     date: string;
     transactionType: TransactionType;
   }): Promise<TransactionDTO> => {
-    if (!expenseToEdit?.id) {
-      throw new Error('Expense ID is required for update');
+    if (!transactionToEdit?.id) {
+      throw new Error('Transaction ID is required for update');
     }
-    const updatedExpense = await expenseService.updateExpense(expenseToEdit.id, userId!, expenseData);
-    alert('Expense updated successfully');
-    return updatedExpense;
+    const updatedTransaction = await transactionDetailsService.updateTransaction(transactionToEdit.id, userId!, transactionData);
+    alert('Transaction updated successfully');
+    return updatedTransaction;
   };
 
   /**
@@ -150,7 +164,7 @@ const Expense: React.FC<ExpenseProps> = ({ mode: propMode, expense: propExpense,
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     // Prevent submission in VIEW mode
-    if (mode === ExpenseMode.VIEW) return;
+    if (mode === TransactionDetailsMode.VIEW) return;
     if (!validateForm() || !userId) return;
 
     setLoadingLocal(true);
@@ -159,31 +173,34 @@ const Expense: React.FC<ExpenseProps> = ({ mode: propMode, expense: propExpense,
       const parsedAmount = parseFloat(amount);
       const roundedAmount = Math.round(parsedAmount * 100) / 100;
 
-      const expenseData = {
+      // Format date as YYYY-MM-DD (date only, no time) in IST
+      const dateStr = formatDateToISO(date!);
+      
+      const transactionData = {
         userId,
         amount: roundedAmount,
         description: description.trim() || undefined,
         category: category.trim(),
-        date: date!.toISOString(),
+        date: dateStr,
         transactionType: transactionType,
       };
 
       // Route to appropriate handler based on mode
-      let updatedExpense: TransactionDTO | undefined;
-      if (mode === ExpenseMode.EDIT) {
-        updatedExpense = await handleUpdateExpense(expenseData);
+      let updatedTransaction: TransactionDTO | undefined;
+      if (mode === TransactionDetailsMode.EDIT) {
+        updatedTransaction = await handleUpdateTransaction(transactionData);
       } else {
-        await handleCreateExpense(expenseData);
+        await handleCreateTransaction(transactionData);
       }
 
       // If in modal mode, call onSaveSuccess callback instead of navigating
       if (isModal && onSaveSuccess) {
-        onSaveSuccess(updatedExpense);
+        onSaveSuccess(updatedTransaction);
       } else {
         navigate('/dashboard');
       }
     } catch (error) {
-      alert('Failed to save expense. Please try again.');
+      alert('Failed to save transaction. Please try again.');
     } finally {
       setLoadingLocal(false);
     }
@@ -191,28 +208,28 @@ const Expense: React.FC<ExpenseProps> = ({ mode: propMode, expense: propExpense,
 
   // ========== Component Configuration Based on Mode ==========
   const modeConfig = useMemo(() => {
-    if (mode === ExpenseMode.VIEW) {
+    if (mode === TransactionDetailsMode.VIEW) {
       return {
-        title: 'View Expense',
+        title: 'View Transaction Details',
         icon: <Receipt size={28} className="header-icon" />,
         submitButtonText: '',
         submitButtonLoadingText: '',
         isReadOnly: true,
       };
     }
-    if (mode === ExpenseMode.EDIT) {
+    if (mode === TransactionDetailsMode.EDIT) {
       return {
-        title: 'Edit Expense',
+        title: 'Edit Transaction Details',
         icon: <Edit size={28} className="header-icon" />,
-        submitButtonText: loading ? 'Updating...' : 'Update Expense',
+        submitButtonText: loading ? 'Updating...' : 'Update Transaction',
         submitButtonLoadingText: 'Updating...',
         isReadOnly: false,
       };
     }
     return {
-      title: 'Add Expense',
+      title: 'Add Transaction Details',
       icon: <PlusCircle size={28} className="header-icon" />,
-      submitButtonText: loading ? 'Adding...' : 'Add Expense',
+      submitButtonText: loading ? 'Adding...' : 'Add Transaction',
       submitButtonLoadingText: 'Adding...',
       isReadOnly: false,
     };
@@ -220,14 +237,14 @@ const Expense: React.FC<ExpenseProps> = ({ mode: propMode, expense: propExpense,
 
   // ========== Render ==========
   // In VIEW mode (modal), userId is not required
-  if (!userId && mode !== ExpenseMode.VIEW) {
+  if (!userId && mode !== TransactionDetailsMode.VIEW) {
     return null;
   }
 
   return (
-    <div className={`expense-container ${isModal ? 'expense-container-modal' : ''}`}>
+    <div className={`transaction-details-container ${isModal ? 'transaction-details-container-modal' : ''}`}>
       {!isModal && (
-        <div className="expense-header">
+        <div className="transaction-details-header">
           <h1>
             {modeConfig.icon}
             {modeConfig.title}
@@ -235,8 +252,8 @@ const Expense: React.FC<ExpenseProps> = ({ mode: propMode, expense: propExpense,
         </div>
       )}
 
-      <div className="expense-content">
-        <form onSubmit={handleSubmit} className="expense-form">
+      <div className="transaction-details-content">
+        <form onSubmit={handleSubmit} className="transaction-details-form">
           <div className="form-group">
             <label className="form-label">
               <DollarSign size={18} className="label-icon" />
@@ -276,6 +293,23 @@ const Expense: React.FC<ExpenseProps> = ({ mode: propMode, expense: propExpense,
 
           <div className="form-group">
             <label className="form-label">
+              <Tag size={18} className="label-icon" />
+              Category *
+            </label>
+            <CategoryDropdown
+              value={category}
+              onChange={(categoryName) => {
+                if (!modeConfig.isReadOnly) setCategory(categoryName);
+              }}
+              placeholder="Select or search category"
+              required={true}
+              disabled={modeConfig.isReadOnly}
+              readOnly={modeConfig.isReadOnly}
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">
               <FileText size={18} className="label-icon" />
               Description
             </label>
@@ -294,25 +328,6 @@ const Expense: React.FC<ExpenseProps> = ({ mode: propMode, expense: propExpense,
 
           <div className="form-group">
             <label className="form-label">
-              <Tag size={18} className="label-icon" />
-              Category *
-            </label>
-            <input
-              type="text"
-              className="form-input"
-              placeholder="Enter category"
-              value={category}
-              onChange={(e) => {
-                if (!modeConfig.isReadOnly) setCategory(e.target.value);
-              }}
-              required
-              readOnly={modeConfig.isReadOnly}
-              disabled={modeConfig.isReadOnly}
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">
               <Calendar size={18} className="label-icon" />
               Date *
             </label>
@@ -321,7 +336,7 @@ const Expense: React.FC<ExpenseProps> = ({ mode: propMode, expense: propExpense,
               onChange={(selectedDate) => {
                 if (!modeConfig.isReadOnly) setDate(selectedDate);
               }}
-              placeholder="Select expense date"
+              placeholder="Select transaction date"
               required
               maxDate={getCurrentDate()}
               disabled={modeConfig.isReadOnly}
@@ -387,7 +402,7 @@ const Expense: React.FC<ExpenseProps> = ({ mode: propMode, expense: propExpense,
                     type="button"
                     className="cancel-button-icon"
                     onClick={() => {
-                      if (mode === ExpenseMode.EDIT && onCancelEdit) {
+                      if (mode === TransactionDetailsMode.EDIT && onCancelEdit) {
                         onCancelEdit();
                       } else if (onClose) {
                         onClose();
@@ -455,5 +470,5 @@ const Expense: React.FC<ExpenseProps> = ({ mode: propMode, expense: propExpense,
   );
 };
 
-export default Expense;
+export default TransactionDetails;
 

@@ -6,11 +6,9 @@ import io.mongock.api.annotations.RollbackExecution;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.IndexOperations;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
-@ChangeUnit(id = "user-email-index-migration", order = "002", author = "finance-tracker")
+@ChangeUnit(id = "user-email-index-migration", order = "003", author = "finance-tracker")
 public class UserAuthMigrationChangelog {
 
     private static final String COLLECTION = "users";

@@ -9,7 +9,7 @@ import MenuBar from './components/MenuBar/MenuBar';
 import { AuthCard } from './packages/auth';
 import Dashboard from './packages/dashboard/Dashboard';
 import Transaction from './packages/transaction/Transaction';
-import Expense from './packages/expense/Expense';
+import TransactionDetails from './packages/trasnaction-detail/TransactionDetails';
 import UserProfile from './packages/user-profile/UserProfile';
 import './App.css';
 
@@ -59,7 +59,7 @@ const AppContent: React.FC = () => {
             element={
               <PrivateRoute>
                 <MenuBar />
-                <Expense />
+                <TransactionDetails />
               </PrivateRoute>
             }
           />

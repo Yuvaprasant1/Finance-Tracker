@@ -1,5 +1,6 @@
 package com.finance.tracker.common.dto;
 
+import com.finance.tracker.common.util.DateTimeUtils;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -27,7 +28,7 @@ public class ErrorDetails {
         return ErrorDetails.builder()
                 .error(error)
                 .message(message)
-                .timestamp(LocalDateTime.now())
+                .timestamp(DateTimeUtils.getCurrentDateTimeIST())
                 .build();
     }
     
@@ -35,7 +36,7 @@ public class ErrorDetails {
         return ErrorDetails.builder()
                 .error(error)
                 .message(message)
-                .timestamp(LocalDateTime.now())
+                .timestamp(DateTimeUtils.getCurrentDateTimeIST())
                 .path(path)
                 .build();
     }
@@ -44,7 +45,7 @@ public class ErrorDetails {
         return ErrorDetails.builder()
                 .error(error)
                 .message(message)
-                .timestamp(LocalDateTime.now())
+                .timestamp(DateTimeUtils.getCurrentDateTimeIST())
                 .path(path)
                 .details(details)
                 .build();

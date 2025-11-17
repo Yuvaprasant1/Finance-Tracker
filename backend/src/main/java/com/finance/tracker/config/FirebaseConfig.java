@@ -19,6 +19,7 @@ import java.util.List;
 @Configuration
 public class FirebaseConfig {
 
+
     private static final Logger log = LoggerFactory.getLogger(FirebaseConfig.class);
 
     @Value("${spring.application.name:finance-tracker}")
@@ -26,7 +27,6 @@ public class FirebaseConfig {
 
     @Value("${auth.firebase.credentialsBase64:}")
     private String firebaseCredentialsBase64;
-
     @Value("${auth.firebase.credentialsPath:}")
     private String firebaseCredentialsPath;
 

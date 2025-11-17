@@ -9,7 +9,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 @Repository
@@ -23,15 +23,15 @@ public interface TransactionRepository extends MongoRepository<FinancialTransact
     
     List<FinancialTransaction> findByUserAndDateBetween(
         User user, 
-        LocalDateTime startDate, 
-        LocalDateTime endDate
+        LocalDate startDate, 
+        LocalDate endDate
     );
     
     @Query("{ 'user_id.$id': ?0, 'date': { $gte: ?1, $lte: ?2 } }")
     List<FinancialTransaction> findTransactionsByUserAndDateRange(
         String userId, 
-        LocalDateTime startDate, 
-        LocalDateTime endDate
+        LocalDate startDate, 
+        LocalDate endDate
     );
     
     @Query("{ '_id': ?0, 'user_id.$id': ?1 }")

@@ -1,43 +1,55 @@
 /**
  * Date Utilities
  * Centralized date-related helper functions
+ * All dates are in IST (Indian Standard Time - UTC+5:30)
  */
 
+const IST_TIMEZONE = 'Asia/Kolkata';
+
 /**
- * Get the current date
- * @returns Current date as a Date object
+ * Get the current date in IST
+ * @returns Current date as a Date object in IST
  */
 export const getCurrentDate = (): Date => {
-  return new Date();
+  const now = new Date();
+  // Convert to IST
+  return new Date(now.toLocaleString('en-US', { timeZone: IST_TIMEZONE }));
 };
 
 /**
- * Get today's date at start of day (00:00:00)
- * @returns Today's date at midnight
+ * Get today's date at start of day (00:00:00) in IST
+ * @returns Today's date at midnight in IST
  */
 export const getTodayStart = (): Date => {
-  const today = new Date();
+  const today = getCurrentDate();
   today.setHours(0, 0, 0, 0);
   return today;
 };
 
 /**
- * Get today's date at end of day (23:59:59)
- * @returns Today's date at end of day
+ * Get today's date at end of day (23:59:59) in IST
+ * @returns Today's date at end of day in IST
  */
 export const getTodayEnd = (): Date => {
-  const today = new Date();
+  const today = getCurrentDate();
   today.setHours(23, 59, 59, 999);
   return today;
 };
 
 /**
- * Format date to ISO string (YYYY-MM-DD)
+ * Format date to ISO string (YYYY-MM-DD) in IST
  * @param date - Date object to format
- * @returns Formatted date string
+ * @returns Formatted date string (date only, no time)
  */
 export const formatDateToISO = (date: Date): string => {
-  return date.toISOString().split('T')[0];
+  // Format date in IST timezone
+  const year = date.toLocaleString('en-US', { year: 'numeric', timeZone: IST_TIMEZONE });
+  const month = date.toLocaleString('en-US', { month: '2-digit', timeZone: IST_TIMEZONE });
+  const day = date.toLocaleString('en-US', { day: '2-digit', timeZone: IST_TIMEZONE });
+  // Ensure zero-padding for month and day
+  const paddedMonth = month.padStart(2, '0');
+  const paddedDay = day.padStart(2, '0');
+  return `${year}-${paddedMonth}-${paddedDay}`;
 };
 
 /**

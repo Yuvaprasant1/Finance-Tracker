@@ -1,16 +1,16 @@
-.expense-container {
+.transaction-details-container {
   min-height: calc(100vh - 80px);
   background-color: var(--bg-primary);
   padding: 2rem;
 }
 
 /* Modal mode styling */
-.expense-container-modal {
+.transaction-details-container-modal {
   min-height: auto;
   padding: 0;
 }
 
-.expense-header {
+.transaction-details-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -22,7 +22,7 @@
   margin-right: auto;
 }
 
-.expense-header h1 {
+.transaction-details-header h1 {
   font-size: 1.75rem;
   font-weight: 600;
   color: var(--text-primary);
@@ -54,7 +54,7 @@
   transform: translateY(-2px);
 }
 
-.expense-content {
+.transaction-details-content {
   max-width: 600px;
   margin: 0 auto;
   background-color: var(--card-bg);
@@ -65,7 +65,7 @@
 }
 
 /* When inside modal, remove extra styling */
-.expense-container-modal .expense-content {
+.transaction-details-container-modal .transaction-details-content {
   max-width: 100%;
   margin: 0;
   padding: 0;
@@ -75,7 +75,7 @@
   background-color: transparent;
 }
 
-.expense-form {
+.transaction-details-form {
   display: flex;
   flex-direction: column;
 }
@@ -327,3 +327,4 @@
   color: #ef4444;
   border: 1px solid rgba(239, 68, 68, 0.3);
 }
+

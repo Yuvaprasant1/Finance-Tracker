@@ -1,6 +1,7 @@
 package com.finance.tracker.dashboard.service;
 
 import com.finance.tracker.common.dto.PaginatedResponse;
+import com.finance.tracker.common.util.DateTimeUtils;
 import com.finance.tracker.dashboard.dto.DashboardSummaryDTO;
 import com.finance.tracker.dashboard.exception.DashboardDataException;
 import com.finance.tracker.dashboard.mapper.DashboardMapper;
@@ -28,8 +29,8 @@ public class DashboardService {
             // Calculate savings
             Double savings = (totalIncome != null ? totalIncome : 0.0) - (totalExpense != null ? totalExpense : 0.0);
             
-            // Get previous month expense
-            YearMonth currentMonth = YearMonth.now();
+            // Get previous month expense (using IST)
+            YearMonth currentMonth = YearMonth.now(DateTimeUtils.IST_ZONE);
             YearMonth previousMonth = currentMonth.minusMonths(1);
             Double previousMonthExpense = transactionService.getTotalExpenseForMonth(userId, previousMonth);
             

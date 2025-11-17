@@ -25,7 +25,7 @@ import org.springframework.context.annotation.Configuration;
 @EnableMongock
 public class MongockConfig {
     // Mongock is enabled
-    // Changelogs will be scanned from com.finance.tracker.currency.changelog package
+    // Changelogs will be scanned from com.finance.tracker package (all subpackages)
     // Configuration is done via application.properties
     // 
     // Connection retry and timeout are handled by MongoDB driver configuration

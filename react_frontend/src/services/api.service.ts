@@ -4,6 +4,7 @@ import { TransactionDTO, TransactionType } from '../packages/transaction/types';
 import { SSOLoginResponse } from '../packages/auth/types';
 import type { DashboardSummaryDTO } from '../packages/dashboard/types';
 import type { UserProfileDTO } from '../packages/user-profile/types';
+import type { CategoryDTO, CategoryPaginatedResponse, CreateCategoryRequest, UpdateCategoryRequest } from '../packages/category/types';
 
 /**
  * API Service Class - Centralized HTTP client with axios
@@ -284,6 +285,35 @@ export class ApiService {
   async getAllCurrencies(): Promise<CurrencyDTO[]> {
     const response = await this.api.get<CurrencyDTO[]>('/currencies');
     return response.data;
+  }
+
+  // ========== Category API Methods ==========
+
+  async getCategories(userId: string, page: number = 0, size: number = 10, searchTerm?: string): Promise<CategoryPaginatedResponse> {
+    const response = await this.api.get<CategoryPaginatedResponse>('/categories', {
+      params: { userId, page, size, searchTerm },
+    });
+    return response.data;
+  }
+
+  async createCategory(userId: string, category: CreateCategoryRequest): Promise<CategoryDTO> {
+    const response = await this.api.post<CategoryDTO>('/categories', category, {
+      params: { userId },
+    });
+    return response.data;
+  }
+
+  async updateCategory(id: string, userId: string, category: UpdateCategoryRequest): Promise<CategoryDTO> {
+    const response = await this.api.put<CategoryDTO>(`/categories/${id}`, category, {
+      params: { userId },
+    });
+    return response.data;
+  }
+
+  async deleteCategory(id: string, userId: string): Promise<void> {
+    await this.api.delete(`/categories/${id}`, {
+      params: { userId },
+    });
   }
 }
 

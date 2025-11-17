@@ -627,9 +627,37 @@ The production profile **requires** the following environment variables (no hard
 | Variable | Required | Description | Example |
 |----------|----------|-------------|---------|
 | `MONGODB_URI` | **Yes** | MongoDB Atlas connection string | `mongodb+srv://user:pass@cluster.mongodb.net/db?retryWrites=true&w=majority` |
+| `FIREBASE_CREDENTIALS_BASE64` | **Yes** | Base64 encoded Firebase service account JSON | `ewogICJ0eXBlIjogInNlcnZpY2VfYWNjb3VudCIs...` |
+| `WEB_CLIENT_ID` | **Yes** | Google OAuth client ID | `1058479237538-xxx.apps.googleusercontent.com` |
 | `SPRING_PROFILES_ACTIVE` | **Yes** | Spring profile to activate | `prod` |
-| `MONGODB_DATABASE` | No | Database name (defaults to `finance_tracker`) | `finance_tracker` |
-| `SERVER_PORT` | No | Server port (defaults to `8080`) | `8080` |
+
+### Optional Environment Variables (with defaults)
+
+| Variable | Default | Description | Example |
+|----------|---------|-------------|---------|
+| `MONGODB_DATABASE` | `finance_tracker` | Database name | `finance_tracker` |
+| `SERVER_PORT` or `PORT` | `8080` | Server port | `8080` |
+| `MONGODB_MIN_POOL_SIZE` | `10` | Minimum MongoDB connection pool size | `10` |
+| `MONGODB_MAX_POOL_SIZE` | `100` | Maximum MongoDB connection pool size | `100` |
+| `MONGODB_CONNECT_TIMEOUT_MS` | `60000` | MongoDB connection timeout (ms) | `60000` |
+| `MONGODB_SOCKET_TIMEOUT_MS` | `60000` | MongoDB socket timeout (ms) | `60000` |
+| `MONGODB_SERVER_SELECTION_TIMEOUT_MS` | `30000` | MongoDB server selection timeout (ms) | `30000` |
+| `MONGODB_MAX_WAIT_TIME_MS` | `30000` | Maximum wait time for connection (ms) | `30000` |
+| `MONGODB_MAX_CONNECTION_IDLE_TIME_MS` | `600000` | Maximum idle time for connection (ms) | `600000` |
+| `MONGODB_SSL_ENABLED` | `true` | Enable SSL for MongoDB | `true` |
+| `LOG_LEVEL_ROOT` | `WARN` | Root logging level | `WARN`, `INFO`, `DEBUG` |
+| `LOG_LEVEL_APP` | `INFO` | Application logging level | `INFO`, `DEBUG` |
+| `LOG_LEVEL_WEB` | `WARN` | Web layer logging level | `WARN`, `DEBUG` |
+| `LOG_LEVEL_MONGODB` | `WARN` | MongoDB logging level | `WARN`, `DEBUG` |
+| `MONGOCK_ENABLED` | `true` | Enable Mongock migrations | `true` |
+| `DEVTOOLS_ENABLED` | `false` | Enable Spring Boot DevTools | `false` |
+| `ACTUATOR_ENDPOINTS` | `health,info,metrics,prometheus` | Comma-separated actuator endpoints | `health,info,metrics` |
+| `ACTUATOR_HEALTH_DETAILS` | `when-authorized` | Health endpoint details | `always`, `when-authorized`, `never` |
+| `ACTUATOR_PROMETHEUS_ENABLED` | `true` | Enable Prometheus metrics | `true` |
+
+### Development Profile Environment Variables
+
+The development profile supports the same environment variables but with different defaults optimized for local development. All values can be overridden via environment variables.
 
 ### Setup Using .env File (Recommended)
 

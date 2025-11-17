@@ -7,7 +7,7 @@ import { formatDateWithTime, formatAmount } from '../../utils/formatters';
 import { Receipt, RefreshCw, Trash2, Calendar, Tag, ArrowLeft, Plus, Edit, TrendingUp, TrendingDown } from 'lucide-react';
 import Pagination from '../../components/Pagination/Pagination';
 import Modal from '../../components/Modal/Modal';
-import Expense, { ExpenseMode } from '../expense/Expense';
+import TransactionDetails, { TransactionDetailsMode } from '../trasnaction-detail/TransactionDetails';
 import './Transaction.css';
 
 const Transaction: React.FC = () => {
@@ -23,7 +23,7 @@ const Transaction: React.FC = () => {
   const [viewModalOpen, setViewModalOpen] = useState<boolean>(false);
   const [createModalOpen, setCreateModalOpen] = useState<boolean>(false);
   const [selectedTransaction, setSelectedTransaction] = useState<TransactionDTO | null>(null);
-  const [modalMode, setModalMode] = useState<ExpenseMode>(ExpenseMode.VIEW);
+  const [modalMode, setModalMode] = useState<TransactionDetailsMode>(TransactionDetailsMode.VIEW);
 
   useEffect(() => {
     if (userId) {
@@ -62,18 +62,18 @@ const Transaction: React.FC = () => {
 
   const handleView = (transaction: TransactionDTO): void => {
     setSelectedTransaction(transaction);
-    setModalMode(ExpenseMode.VIEW);
+    setModalMode(TransactionDetailsMode.VIEW);
     setViewModalOpen(true);
   };
 
   const handleDoubleClick = (transaction: TransactionDTO): void => {
     setSelectedTransaction(transaction);
-    setModalMode(ExpenseMode.VIEW);
+    setModalMode(TransactionDetailsMode.VIEW);
     setViewModalOpen(true);
   };
 
   const handleEditInModal = (): void => {
-    setModalMode(ExpenseMode.EDIT);
+    setModalMode(TransactionDetailsMode.EDIT);
   };
 
   const handleDeleteInModal = async (): Promise<void> => {
@@ -101,23 +101,23 @@ const Transaction: React.FC = () => {
   const handleCloseViewModal = (): void => {
     setViewModalOpen(false);
     setSelectedTransaction(null);
-    setModalMode(ExpenseMode.VIEW);
+    setModalMode(TransactionDetailsMode.VIEW);
   };
 
-  const handleSaveSuccess = (updatedExpense?: TransactionDTO): void => {
+  const handleSaveSuccess = (updatedTransaction?: TransactionDTO): void => {
     // Reload transactions after successful save
     loadTransactions(currentPage);
     // Update selected transaction if provided
-    if (updatedExpense) {
-      setSelectedTransaction(updatedExpense);
+    if (updatedTransaction) {
+      setSelectedTransaction(updatedTransaction);
     }
     // Switch back to view mode
-    setModalMode(ExpenseMode.VIEW);
+    setModalMode(TransactionDetailsMode.VIEW);
   };
 
   const handleCancelEdit = (): void => {
     // Switch back to view mode
-    setModalMode(ExpenseMode.VIEW);
+    setModalMode(TransactionDetailsMode.VIEW);
   };
 
   const handleAddExpense = (): void => {
@@ -259,10 +259,10 @@ const Transaction: React.FC = () => {
       <Modal
         isOpen={viewModalOpen}
         onClose={handleCloseViewModal}
-        title={modalMode === ExpenseMode.EDIT ? "Edit Expense" : "View Expense"}
+        title={modalMode === TransactionDetailsMode.EDIT ? "Edit Transaction Details" : "View Transaction Details"}
         size="medium"
         headerActions={
-          modalMode === ExpenseMode.VIEW && selectedTransaction ? (
+          modalMode === TransactionDetailsMode.VIEW && selectedTransaction ? (
             <>
               <button
                 className="modal-header-action-button primary"
@@ -285,7 +285,7 @@ const Transaction: React.FC = () => {
         }
       >
         {selectedTransaction && (
-          <Expense
+          <TransactionDetails
             mode={modalMode}
             expense={selectedTransaction}
             onClose={handleCloseViewModal}
@@ -296,15 +296,15 @@ const Transaction: React.FC = () => {
         )}
       </Modal>
 
-      {/* Create Expense Modal */}
+      {/* Create Transaction Details Modal */}
       <Modal
         isOpen={createModalOpen}
         onClose={handleCloseCreateModal}
-        title="Add Expense"
+        title="Add Transaction Details"
         size="medium"
       >
-        <Expense
-          mode={ExpenseMode.CREATE}
+        <TransactionDetails
+          mode={TransactionDetailsMode.CREATE}
           onClose={handleCloseCreateModal}
           isModal={true}
           onSaveSuccess={handleCreateSuccess}

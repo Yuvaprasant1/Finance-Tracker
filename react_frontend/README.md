@@ -47,32 +47,57 @@ The application will open at `http://localhost:3000` in your browser.
 
 ### Environment Variables
 
-The application uses environment variables to configure the backend API URL. The API service automatically reads from `REACT_APP_API_BASE_URL` environment variable.
+The application uses environment variables to configure both the backend API URL and Firebase authentication. All environment variables must be prefixed with `REACT_APP_` to be accessible in React applications.
+
+#### Required Environment Variables
+
+**Firebase Configuration:**
+- `REACT_APP_FIREBASE_API_KEY` - Firebase API key
+- `REACT_APP_FIREBASE_AUTH_DOMAIN` - Firebase authentication domain (e.g., `your-project.firebaseapp.com`)
+- `REACT_APP_FIREBASE_PROJECT_ID` - Firebase project ID
+- `REACT_APP_FIREBASE_STORAGE_BUCKET` - Firebase storage bucket (e.g., `your-project.firebasestorage.app`)
+- `REACT_APP_FIREBASE_MESSAGING_SENDER_ID` - Firebase messaging sender ID
+- `REACT_APP_FIREBASE_APP_ID` - Firebase app ID
+- `REACT_APP_FIREBASE_MEASUREMENT_ID` - Firebase measurement ID (optional, for analytics)
+
+**Backend API Configuration:**
+- `REACT_APP_API_BASE_URL` - Backend API base URL (e.g., `http://localhost:8080/finance-tracker/api/v1`)
 
 #### Environment Files
 
-The project includes example environment files:
-- `.env.example` - Template for environment variables
-- `.env.development` - Development environment variables
-- `.env.production` - Production environment variables
+Create a `.env` file in the `react_frontend` directory with the following structure:
+
+```env
+# Firebase Configuration
+# Get these values from Firebase Console → Project Settings → General → Your apps
+REACT_APP_FIREBASE_API_KEY=your-firebase-api-key
+REACT_APP_FIREBASE_AUTH_DOMAIN=your-project-id.firebaseapp.com
+REACT_APP_FIREBASE_PROJECT_ID=your-project-id
+REACT_APP_FIREBASE_STORAGE_BUCKET=your-project-id.firebasestorage.app
+REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your-messaging-sender-id
+REACT_APP_FIREBASE_APP_ID=your-app-id
+REACT_APP_FIREBASE_MEASUREMENT_ID=your-measurement-id
+
+# Backend API Configuration
+REACT_APP_API_BASE_URL=http://localhost:8080/finance-tracker/api/v1
+```
 
 #### Setting Up Environment Variables
 
 1. **For Local Development:**
-   - Copy `.env.example` to `.env`:
-     ```bash
-     cp .env.example .env
-     ```
-   - Or create `.env` manually with:
-     ```env
-     REACT_APP_API_BASE_URL=http://localhost:8080/finance-tracker/api/v1
-     ```
+   - Create a `.env` file in the `react_frontend` directory
+   - Add all required Firebase and API configuration variables
+   - Get Firebase values from [Firebase Console](https://console.firebase.google.com/) → Project Settings → General → Your apps
 
 2. **For Production:**
-   - Set `REACT_APP_API_BASE_URL` in your deployment platform (Render, Vercel, Netlify, etc.)
-   - Or update `.env.production` before building
+   - Set all environment variables in your deployment platform (Render, Vercel, Netlify, etc.)
+   - Or create a `.env.production` file before building
+   - **Important:** Never commit `.env` files with real credentials to version control
 
-**Important:** Environment variables must be prefixed with `REACT_APP_` to be accessible in React applications. They are embedded at build time, so you need to rebuild if you change them.
+**Important Notes:**
+- Environment variables must be prefixed with `REACT_APP_` to be accessible in React applications
+- They are embedded at build time, so you need to rebuild if you change them
+- The application will throw an error at startup if required Firebase environment variables are missing
 
 ## Running the Application
 
@@ -333,6 +358,13 @@ If you prefer Docker deployment with nginx:
 
 | Variable | Description | Example | Required |
 |----------|-------------|---------|----------|
+| `REACT_APP_FIREBASE_API_KEY` | Firebase API key | `AIzaSyBxIMRdkFJQVm0U54vfZtztQ62TxWCG0bk` | Yes |
+| `REACT_APP_FIREBASE_AUTH_DOMAIN` | Firebase auth domain | `finance-tracker-53c8a.firebaseapp.com` | Yes |
+| `REACT_APP_FIREBASE_PROJECT_ID` | Firebase project ID | `finance-tracker-53c8a` | Yes |
+| `REACT_APP_FIREBASE_STORAGE_BUCKET` | Firebase storage bucket | `finance-tracker-53c8a.firebasestorage.app` | Yes |
+| `REACT_APP_FIREBASE_MESSAGING_SENDER_ID` | Firebase messaging sender ID | `1058479237538` | Yes |
+| `REACT_APP_FIREBASE_APP_ID` | Firebase app ID | `1:1058479237538:web:ace1ebbe05721fe74c2afb` | Yes |
+| `REACT_APP_FIREBASE_MEASUREMENT_ID` | Firebase measurement ID | `G-3MYCLH6EHZ` | No |
 | `REACT_APP_API_BASE_URL` | Backend API base URL | `https://finance-tracker-backend.onrender.com/finance-tracker/api/v1` | Yes |
 
 **Important Notes:**

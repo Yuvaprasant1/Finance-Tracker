@@ -4,26 +4,51 @@
 # uses ONLY environment variables for security. Never hardcode credentials.
 #
 # To configure production:
-# 1. Set environment variables (see .env.example)
+# 1. Set environment variables (see required and optional variables below)
 # 2. Or use the setup scripts in scripts/ directory
+#
+# Required Environment Variables:
+# - MONGODB_URI (required) - MongoDB connection string
+# - FIREBASE_CREDENTIALS_BASE64 (required) - Base64 encoded Firebase service account JSON
+# - WEB_CLIENT_ID (required) - Google OAuth client ID
+#
+# Optional Environment Variables (with defaults shown):
+# - MONGODB_DATABASE (default: finance_tracker)
+# - SERVER_PORT or PORT (default: 8080)
+# - MONGODB_MIN_POOL_SIZE (default: 10)
+# - MONGODB_MAX_POOL_SIZE (default: 100)
+# - MONGODB_CONNECT_TIMEOUT_MS (default: 60000)
+# - MONGODB_SOCKET_TIMEOUT_MS (default: 60000)
+# - LOG_LEVEL_ROOT (default: WARN)
+# - LOG_LEVEL_APP (default: INFO)
+# - ACTUATOR_ENDPOINTS (default: health,info,metrics,prometheus)
 
 # MongoDB Configuration - Production (MongoDB Atlas)
 # REQUIRED: Set MONGODB_URI environment variable
-# This file shows the structure, but actual credentials come from environment variables
 spring.data.mongodb.uri=${MONGODB_URI}
 spring.data.mongodb.database=${MONGODB_DATABASE:finance_tracker}
 
-# Server Configuration
-server.port=${SERVER_PORT:8080}
+# MongoDB Connection Pool Configuration (all configurable via env vars)
+spring.data.mongodb.option.min-pool-size=${MONGODB_MIN_POOL_SIZE:10}
+spring.data.mongodb.option.max-pool-size=${MONGODB_MAX_POOL_SIZE:100}
+spring.data.mongodb.option.connect-timeout-ms=${MONGODB_CONNECT_TIMEOUT_MS:60000}
+spring.data.mongodb.option.socket-timeout-ms=${MONGODB_SOCKET_TIMEOUT_MS:60000}
 
-# Logging Configuration
-logging.level.root=WARN
-logging.level.com.finance.tracker=INFO
+# Server Configuration
+server.port=${SERVER_PORT:${PORT:8080}}
+
+# Logging Configuration (all configurable via env vars)
+logging.level.root=${LOG_LEVEL_ROOT:WARN}
+logging.level.com.finance.tracker=${LOG_LEVEL_APP:INFO}
 
 # Mongock Configuration
-mongock.runner.enabled=true
+mongock.runner.enabled=${MONGOCK_ENABLED:true}
 
 # Spring Boot DevTools - Disabled in production
-spring.devtools.restart.enabled=false
-spring.devtools.livereload.enabled=false
+spring.devtools.restart.enabled=${DEVTOOLS_ENABLED:false}
+spring.devtools.livereload.enabled=${DEVTOOLS_LIVERELOAD_ENABLED:false}
+
+# Actuator Configuration (configurable via env vars)
+management.endpoints.web.exposure.include=${ACTUATOR_ENDPOINTS:health,info,metrics,prometheus}
+management.endpoint.health.show-details=${ACTUATOR_HEALTH_DETAILS:when-authorized}
 

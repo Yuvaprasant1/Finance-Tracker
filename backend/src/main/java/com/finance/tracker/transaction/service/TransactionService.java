@@ -17,6 +17,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.finance.tracker.common.util.DateTimeUtils;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.List;
@@ -121,8 +123,8 @@ public class TransactionService {
     
     public Double getTotalExpenseForMonth(String userId, YearMonth yearMonth) {
         User user = userService.getUserById(userId);
-        LocalDateTime startDate = yearMonth.atDay(1).atStartOfDay();
-        LocalDateTime endDate = yearMonth.atEndOfMonth().atTime(23, 59, 59);
+        LocalDate startDate = yearMonth.atDay(1);
+        LocalDate endDate = yearMonth.atEndOfMonth();
         List<FinancialTransaction> transactions = transactionRepository.findByUserAndDateBetween(user, startDate, endDate);
         return transactions.stream()
                 .filter(t -> t.getTransactionType() == TransactionType.EXPENSE)
@@ -132,9 +134,9 @@ public class TransactionService {
     
     public PaginatedResponse<TransactionDTO> getCurrentMonthTransactions(String userId, int page, int size) {
         User user = userService.getUserById(userId);
-        YearMonth currentMonth = YearMonth.now();
-        LocalDateTime startDate = currentMonth.atDay(1).atStartOfDay();
-        LocalDateTime endDate = currentMonth.atEndOfMonth().atTime(23, 59, 59);
+        YearMonth currentMonth = YearMonth.now(DateTimeUtils.IST_ZONE);
+        LocalDate startDate = currentMonth.atDay(1);
+        LocalDate endDate = currentMonth.atEndOfMonth();
         
         List<FinancialTransaction> allTransactions = transactionRepository.findByUserAndDateBetween(user, startDate, endDate);
         List<FinancialTransaction> sortedTransactions = allTransactions.stream()

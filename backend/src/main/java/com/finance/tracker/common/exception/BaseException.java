@@ -1,5 +1,6 @@
 package com.finance.tracker.common.exception;
 
+import com.finance.tracker.common.util.DateTimeUtils;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
@@ -18,14 +19,14 @@ public abstract class BaseException extends RuntimeException {
         super(message);
         this.httpStatus = httpStatus;
         this.errorCode = errorCode;
-        this.timestamp = LocalDateTime.now();
+        this.timestamp = DateTimeUtils.getCurrentDateTimeIST();
     }
     
     protected BaseException(String message, Throwable cause, HttpStatus httpStatus, String errorCode) {
         super(message, cause);
         this.httpStatus = httpStatus;
         this.errorCode = errorCode;
-        this.timestamp = LocalDateTime.now();
+        this.timestamp = DateTimeUtils.getCurrentDateTimeIST();
     }
 }
 

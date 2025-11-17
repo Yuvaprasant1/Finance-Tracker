@@ -17,7 +17,7 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Document(collection = "financial_transactions")
 @Data
@@ -47,7 +47,7 @@ public class FinancialTransaction extends BaseEntity {
     private String category;
     
     @NotNull(message = "Date is required")
-    private LocalDateTime date;
+    private LocalDate date;
     
     @NotNull(message = "Transaction type is required")
     private TransactionType transactionType = TransactionType.EXPENSE;

@@ -1,23 +1,41 @@
+/**
+ * Format date string to display format (date only, no time)
+ * Uses IST timezone
+ * @param dateString - Date string (ISO format or LocalDate string)
+ * @returns Formatted date string (e.g., "Jan 15, 2024")
+ */
 export const formatDate = (dateString: string | undefined): string => {
   if (!dateString) return '';
-  const date = new Date(dateString);
+  
+  // Handle both ISO datetime strings and date-only strings (YYYY-MM-DD)
+  let date: Date;
+  if (dateString.includes('T')) {
+    // ISO datetime string
+    date = new Date(dateString);
+  } else {
+    // Date-only string (YYYY-MM-DD) - parse as IST
+    const [year, month, day] = dateString.split('-').map(Number);
+    date = new Date(year, month - 1, day);
+  }
+  
   return date.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
+    timeZone: 'Asia/Kolkata',
   });
 };
 
+/**
+ * Format date string to display format (date only, no time)
+ * This is the same as formatDate since transactions only store dates
+ * Kept for backward compatibility
+ * @param dateString - Date string
+ * @returns Formatted date string (date only)
+ */
 export const formatDateWithTime = (dateString: string | undefined): string => {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  // Transactions only store dates, not times, so return date only
+  return formatDate(dateString);
 };
 
 export const formatAmount = (amount: number | undefined, currency: string = 'INR'): string => {
