@@ -1,0 +1,78 @@
+name: Deploy Frontend to Firebase Hosting
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'react_frontend/**'
+      - '.github/workflows/firebase-deploy.yaml'
+  workflow_dispatch: # Allow manual triggering
+
+env:
+  NODE_VERSION: '18.x'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: react_frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./react_frontend
+        run: npm ci
+
+      - name: Create environment file
+        working-directory: ./react_frontend
+        run: |
+          cat > .env << EOF
+          REACT_APP_FIREBASE_API_KEY=${{ vars.REACT_APP_FIREBASE_API_KEY }}
+          REACT_APP_FIREBASE_AUTH_DOMAIN=${{ vars.REACT_APP_FIREBASE_AUTH_DOMAIN }}
+          REACT_APP_FIREBASE_PROJECT_ID=${{ vars.REACT_APP_FIREBASE_PROJECT_ID }}
+          REACT_APP_FIREBASE_STORAGE_BUCKET=${{ vars.REACT_APP_FIREBASE_STORAGE_BUCKET }}
+          REACT_APP_FIREBASE_MESSAGING_SENDER_ID=${{ vars.REACT_APP_FIREBASE_MESSAGING_SENDER_ID }}
+          REACT_APP_FIREBASE_APP_ID=${{ vars.REACT_APP_FIREBASE_APP_ID }}
+          REACT_APP_FIREBASE_MEASUREMENT_ID=${{ vars.REACT_APP_FIREBASE_MEASUREMENT_ID }}
+          REACT_APP_API_BASE_URL=${{ vars.REACT_APP_API_BASE_URL }}
+          EOF
+
+      - name: Build React app
+        working-directory: ./react_frontend
+        run: npm run build
+        env:
+          CI: false # Disable CI mode to allow warnings
+
+      - name: Setup Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Authenticate with Firebase
+        run: |
+          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}' > $HOME/firebase-service-account.json
+          export GOOGLE_APPLICATION_CREDENTIALS=$HOME/firebase-service-account.json
+
+      - name: Configure Firebase project
+        working-directory: ./react_frontend
+        run: |
+          cat > .firebaserc << EOF
+          {
+            "projects": {
+              "default": "${{ vars.FIREBASE_PROJECT_ID }}"
+            }
+          }
+          EOF
+
+      - name: Deploy to Firebase Hosting
+        working-directory: ./react_frontend
+        run: firebase deploy --only hosting --project ${{ vars.FIREBASE_PROJECT_ID }}
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: $HOME/firebase-service-account.json
+

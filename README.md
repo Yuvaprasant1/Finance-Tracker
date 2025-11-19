@@ -6,8 +6,10 @@ A full-stack personal expense tracking application built with Spring Boot and Re
 
 ```
 Finance-Tracker/
-├── backend/          # Spring Boot REST API
-└── frontend-web/     # React TypeScript Web Application
+├── backend/          # Spring Boot REST API (Deployed to GCP Cloud Run)
+├── react_frontend/   # React TypeScript Web Application (Deployed to Firebase Hosting)
+└── .github/
+    └── workflows/    # GitHub Actions CI/CD workflows
 ```
 
 ## Features
@@ -73,7 +75,7 @@ Finance-Tracker/
 
 1. Navigate to the frontend directory:
    ```bash
-   cd frontend-web
+   cd react_frontend
    ```
 
 2. Install dependencies:
@@ -90,63 +92,114 @@ Finance-Tracker/
 
 ## Deployment
 
-### Deploy on Render
+This project uses automated CI/CD deployment with GitHub Actions:
 
-This project includes a `render.yaml` blueprint for easy deployment on Render.
+- **Backend:** Deployed to **Google Cloud Run** (GCP) via GitHub Actions
+- **Frontend:** Deployed to **Firebase Hosting** via GitHub Actions
 
-#### Prerequisites
+### Automated Deployment
 
-1. GitHub repository with your code
-2. Render account (sign up at https://render.com)
-3. MongoDB Atlas database (or other MongoDB instance)
+Both backend and frontend deployments are automated through GitHub Actions workflows:
 
-#### Quick Deployment
+- **Backend Deployment:** Triggered on push to `main` branch → Builds Docker image → Deploys to Cloud Run
+- **Frontend Deployment:** Triggered on push to `main` branch when `react_frontend/` changes → Builds React app → Deploys to Firebase Hosting
 
-1. **Connect Repository to Render:**
-   - Go to Render Dashboard
-   - Click "New +" → "Blueprint"
-   - Connect your GitHub repository
-   - Render will detect `render.yaml` and create services automatically
+### Prerequisites
 
-2. **Configure Environment Variables:**
-   
-   **Backend Service:**
-   - `SPRING_PROFILES_ACTIVE=prod`
-   - `MONGODB_URI=your-mongodb-connection-string` (required)
-   - `MONGODB_DATABASE=finance_tracker` (optional)
-   - `SERVER_PORT=8080` (optional)
+1. **Google Cloud Platform (GCP) Setup:**
+   - GCP project with billing enabled
+   - Artifact Registry repository for Docker images
+   - Cloud Run API enabled
+   - Service account with required permissions
+   - See [GCP Setup Guide](GCP_SETUP.md) for detailed instructions
 
-   **Frontend Service:**
-   - `REACT_APP_API_BASE_URL=https://your-backend-service-name.onrender.com/finance-tracker/api/v1` (required)
-   - Replace `your-backend-service-name` with your actual backend service name
-   - **Build Command:** `cd frontend-web && npm install && npm run build`
-   - **Publish Directory:** `frontend-web/build`
+2. **Firebase Setup:**
+   - Firebase project created
+   - Firebase Hosting enabled
+   - Service account key for CI/CD
+   - See [Firebase Setup Guide](.github/FIREBASE_SETUP.md) for detailed instructions
 
-3. **Deploy:**
-   - Render will automatically build and deploy both services
-   - Monitor the build logs
-   - Services will be available at:
-     - Backend: `https://your-backend-service-name.onrender.com`
-     - Frontend: `https://your-frontend-service-name.onrender.com`
+3. **GitHub Configuration:**
+   - Repository secrets configured (see below)
+   - Repository variables configured (see below)
 
-#### Detailed Deployment Guides
+### GitHub Secrets and Variables
 
-- [Backend Deployment Guide](backend/README.md#deployment-on-render) - Complete backend deployment instructions
-- [Frontend Deployment Guide](frontend-web/README.md#deployment-on-render) - Complete frontend deployment instructions
+#### Backend (GCP) Configuration
 
-#### Important Notes
+**Secrets:**
+- `GCP_SA_KEY` - GCP Service Account JSON key
+- `MONGODB_URI` - MongoDB connection string
+- `FIREBASE_CREDENTIALS_BASE64` - Base64 encoded Firebase credentials
 
-1. **MongoDB Atlas:** Configure network access to allow connections from Render (IP: `0.0.0.0/0` or specific Render IPs)
-2. **Environment Variables:** Set sensitive variables in Render dashboard, not in `render.yaml`
-3. **Backend First:** Deploy backend first, then use its URL for frontend configuration
-4. **CORS:** Ensure backend CORS configuration allows requests from frontend domain
+**Variables:**
+- `SERVICE_NAME` - Cloud Run service name (e.g., `backend`)
+- `REGION` - GCP region (e.g., `asia-south1`)
+- `REPO` - Artifact Registry repository name (e.g., `finance-tracker`)
+- `GCP_PROJECT_ID` - Google Cloud Project ID
+- `SPRING_PROFILES_ACTIVE` - Spring profile (e.g., `prod`)
+- `MONGODB_DATABASE` - MongoDB database name
+- `WEB_CLIENT_ID` - Firebase Web Client ID
+
+See [Backend Deployment Setup](.github/BACKEND_DEPLOY_SETUP.md) for detailed configuration instructions.
+
+#### Frontend (Firebase) Configuration
+
+**Secrets:**
+- `FIREBASE_SERVICE_ACCOUNT_KEY` - Firebase service account JSON key
+
+**Variables:**
+- `FIREBASE_PROJECT_ID` - Firebase project ID
+- `REACT_APP_FIREBASE_API_KEY` - Firebase API key
+- `REACT_APP_FIREBASE_AUTH_DOMAIN` - Firebase auth domain
+- `REACT_APP_FIREBASE_PROJECT_ID` - Firebase project ID
+- `REACT_APP_FIREBASE_STORAGE_BUCKET` - Firebase storage bucket
+- `REACT_APP_FIREBASE_MESSAGING_SENDER_ID` - Firebase messaging sender ID
+- `REACT_APP_FIREBASE_APP_ID` - Firebase app ID
+- `REACT_APP_FIREBASE_MEASUREMENT_ID` - Firebase measurement ID (optional)
+- `REACT_APP_API_BASE_URL` - Backend API base URL
+
+See [Firebase Setup Guide](.github/FIREBASE_SETUP.md) for detailed configuration instructions.
+
+### Deployment Workflow
+
+1. **Initial Setup:**
+   - Complete GCP setup (see [GCP_SETUP.md](GCP_SETUP.md))
+   - Complete Firebase setup (see [.github/FIREBASE_SETUP.md](.github/FIREBASE_SETUP.md))
+   - Configure GitHub secrets and variables
+
+2. **Automatic Deployment:**
+   - Push code to `main` branch
+   - Backend workflow builds Docker image and deploys to Cloud Run
+   - Frontend workflow builds React app and deploys to Firebase Hosting
+
+3. **Manual Deployment:**
+   - Backend: Trigger workflow manually from GitHub Actions
+   - Frontend: Trigger workflow manually or push changes to `react_frontend/` directory
+
+### Detailed Deployment Guides
+
+- [GCP Setup Guide](GCP_SETUP.md) - Complete GCP and Cloud Run setup instructions
+- [Backend Deployment Setup](.github/BACKEND_DEPLOY_SETUP.md) - GitHub Actions configuration for backend
+- [Firebase Setup Guide](.github/FIREBASE_SETUP.md) - Firebase Hosting setup and GitHub Actions configuration
+- [Backend README](backend/README.md) - Backend API documentation and local development
+- [Frontend README](react_frontend/README.md) - Frontend application documentation and local development
+
+### Important Notes
+
+1. **Backend First:** Deploy backend first, then use its Cloud Run URL for frontend `REACT_APP_API_BASE_URL`
+2. **Environment Variables:** All sensitive data should be stored in GitHub Secrets, not committed to the repository
+3. **MongoDB Atlas:** Configure network access to allow connections from Cloud Run
+4. **CORS:** Backend CORS configuration allows requests from Firebase Hosting domain
+5. **Build Time:** Frontend environment variables are embedded at build time, so changes require a rebuild
 
 ## Documentation
 
-- [Backend README](backend/README.md) - Backend API documentation and deployment guide
-- [Frontend README](frontend-web/README.md) - Frontend application documentation and deployment guide
-- [Deployment Guide](DEPLOYMENT.md) - Complete deployment instructions
-- [Troubleshooting Guide](TROUBLESHOOTING.md) - Common issues and solutions
+- [Backend README](backend/README.md) - Backend API documentation and GCP deployment guide
+- [Frontend README](react_frontend/README.md) - Frontend application documentation and Firebase deployment guide
+- [GCP Setup Guide](GCP_SETUP.md) - Complete GCP and Cloud Run setup instructions
+- [Backend Deployment Setup](.github/BACKEND_DEPLOY_SETUP.md) - GitHub Actions configuration for backend
+- [Firebase Setup Guide](.github/FIREBASE_SETUP.md) - Firebase Hosting setup and GitHub Actions configuration
 
 ## License
 

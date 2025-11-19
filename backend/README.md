@@ -404,203 +404,30 @@ docker-compose up
 - **Health Check:** `/finance-tracker/actuator/health`
 - **User:** Non-root user for security
 
-## Deployment on Render
+## Local Development with Docker Compose
 
-### Prerequisites
+For local development with MongoDB, use the included `docker-compose.yml`:
 
-1. GitHub repository with your code
-2. Render account (sign up at https://render.com)
-3. MongoDB Atlas database (or other MongoDB instance)
-
-### Deployment Steps
-
-1. **Connect Repository to Render:**
-   - Go to Render Dashboard
-   - Click "New +" → "Web Service"
-   - Connect your GitHub repository
-   - Select the repository and branch
-
-2. **Configure Service:**
-   - **Name:** finance-tracker-backend
-   - **Environment:** Docker
-   - **Dockerfile Path:** `./backend/Dockerfile`
-   - **Docker Context:** `./backend`
-   - **Plan:** Free (or upgrade for production)
-
-3. **Set Environment Variables in Render Dashboard:**
-   ```
-   SPRING_PROFILES_ACTIVE=prod
-   MONGODB_URI=your-mongodb-connection-string
-   MONGODB_DATABASE=finance_tracker
-   SERVER_PORT=8080
-   ```
-
-4. **Deploy:**
-   - Click "Create Web Service"
-   - Render will build and deploy automatically
-   - Monitor the build logs
-
-5. **Health Check:**
-   - Render automatically checks: `/finance-tracker/actuator/health`
-   - Service will be marked healthy when health endpoint returns 200
-
-### Using render.yaml (Blueprint)
-
-Alternatively, use the `render.yaml` file for Infrastructure as Code:
-
-1. **Commit render.yaml to your repository** (already included)
-2. **In Render Dashboard:**
-   - Go to "New +" → "Blueprint"
-   - Connect your repository
-   - Render will detect `render.yaml` and create services automatically
-
-### Render Environment Variables
-
-Required environment variables in Render:
-
-| Variable | Description | Example | Required |
-|----------|-------------|---------|----------|
-| `SPRING_PROFILES_ACTIVE` | Spring profile | `prod` | Yes |
-| `MONGODB_URI` | MongoDB connection string with SSL and retry parameters | `mongodb+srv://user:pass@cluster.mongodb.net/db?retryWrites=true&w=majority&ssl=true` | Yes |
-| `MONGODB_DATABASE` | Database name | `finance_tracker` | No (defaults to finance_tracker) |
-| `SERVER_PORT` | Server port | `8080` | No (defaults to 8080) |
-
-**Important Notes:**
-
-1. **MongoDB Connection String Format:**
-   - Must use `mongodb+srv://` protocol for MongoDB Atlas
-   - Must include `retryWrites=true` for write retry
-   - Must include `w=majority` for write concern
-   - Must include `ssl=true` for SSL/TLS encryption
-   - Full format: `mongodb+srv://username:password@cluster.mongodb.net/database?retryWrites=true&w=majority&ssl=true`
-
-2. **Port Configuration:**
-   - Render automatically sets `PORT` environment variable
-   - The application is configured to use `SERVER_PORT` first, then fallback to `PORT`
-   - Default port is 8080 if neither is set
-
-3. **MongoDB Atlas Network Access:**
-   - **Critical:** You must configure Network Access in MongoDB Atlas
-   - Whitelist IP address `0.0.0.0/0` to allow connections from Render
-   - See "MongoDB Atlas Network Access Setup" section below for detailed instructions
-
-### Render Deployment Features
-
-- **Auto-deploy:** Automatically deploys on git push to main branch
-- **Health Checks:** Automatic health monitoring
-- **Logs:** View application logs in Render dashboard
-- **Metrics:** Monitor application performance
-- **SSL:** Automatic HTTPS/SSL certificates
-- **Custom Domain:** Add your custom domain
-
-### MongoDB Atlas Network Access Setup
-
-**Critical:** MongoDB Atlas requires network access configuration to allow connections from Render.
-
-#### Step 1: Configure Network Access in MongoDB Atlas
-
-1. **Log in to MongoDB Atlas:**
-   - Go to https://cloud.mongodb.com/
-   - Navigate to your cluster
-
-2. **Configure Network Access:**
-   - Go to **Network Access** in the left sidebar
-   - Click **Add IP Address**
-   - For Render deployment, you have two options:
-
-   **Option A: Allow All IPs (Quick Setup - Development)**
-   - Click **Allow Access from Anywhere**
-   - IP Address: `0.0.0.0/0`
-   - Comment: "Render deployment"
-   - Click **Confirm**
-
-   **Option B: Allow Specific IPs (Recommended for Production)**
-   - Render uses dynamic IPs, so you may need to:
-     - Allow `0.0.0.0/0` temporarily to test
-     - Or use MongoDB Atlas VPC peering (advanced)
-     - Or use MongoDB Atlas Private Endpoint (advanced)
-
-3. **Verify Database User:**
-   - Go to **Database Access**
-   - Ensure your database user has proper permissions
-   - User should have read/write access to the database
-
-#### Step 2: Verify Connection String
-
-Your MongoDB connection string should include:
-
-```
-mongodb+srv://username:password@cluster.mongodb.net/database?retryWrites=true&w=majority&ssl=true
+```bash
+cd backend
+docker-compose up
 ```
 
-**Required Parameters:**
-- `retryWrites=true` - Enable retry for write operations
-- `w=majority` - Write concern for durability
-- `ssl=true` - Enable SSL/TLS (required for Atlas)
+This will start:
+- **MongoDB** on port 27017
+- **Backend API** on port 8080
 
-**Example:**
-```
-MONGODB_URI=mongodb+srv://financeAdmin:password@financecluster.6xj5m8y.mongodb.net/finance_tracker?retryWrites=true&w=majority&ssl=true
-```
+The backend will automatically connect to the MongoDB container. Environment variables are configured in `docker-compose.yml` for development.
 
-#### Step 3: Set Environment Variables in Render
-
-In Render Dashboard, set these environment variables:
-
-```
-SPRING_PROFILES_ACTIVE=prod
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/database?retryWrites=true&w=majority&ssl=true
-MONGODB_DATABASE=finance_tracker
-SERVER_PORT=8080
+To stop:
+```bash
+docker-compose down
 ```
 
-### Troubleshooting Render Deployment
-
-1. **Build Fails:**
-   - Check Dockerfile path and context
-   - Verify all required files are in repository
-   - Check build logs in Render dashboard
-
-2. **Application Won't Start:**
-   - Verify environment variables are set correctly
-   - Check MongoDB connection string format
-   - Review application logs in Render dashboard
-   - Verify MongoDB Atlas Network Access is configured
-
-3. **MongoDB Connection Errors:**
-   
-   **Error: "Timed out after 30000 ms" or "SSL Exception"**
-   - **Solution:** Configure MongoDB Atlas Network Access (see above)
-   - Verify connection string includes `ssl=true` and `retryWrites=true`
-   - Check that IP address `0.0.0.0/0` is whitelisted in MongoDB Atlas
-   - Verify database user credentials are correct
-   - Check MongoDB Atlas cluster status (ensure it's running)
-
-   **Error: "Mongock connection failed" or "UnsatisfiedDependencyException: Error creating bean with name 'getBuilder'"**
-   - **Solution:** This error indicates MongoDB connection failure during Mongock initialization
-   - Mongock uses the same MongoDB connection as the application
-   - Verify MongoDB connection configuration:
-     - Check MongoDB Atlas Network Access is configured (whitelist IP addresses - see setup guide above)
-     - Verify connection string includes `ssl=true&retryWrites=true&w=majority`
-     - Check database user credentials are correct
-     - Verify MongoDB connection pool settings in application-prod.properties
-   - Connection timeouts are configured to 60 seconds (connect-timeout-ms, socket-timeout-ms)
-   - If connection takes longer, increase timeout values in application-prod.properties:
-     ```properties
-     spring.data.mongodb.option.connect-timeout-ms=90000
-     spring.data.mongodb.option.socket-timeout-ms=90000
-     ```
-
-   **Error: "Authentication failed"**
-   - **Solution:** Verify database user credentials in MongoDB Atlas
-   - Check username and password in connection string
-   - Ensure database user has proper permissions
-
-4. **Health Check Fails:**
-   - Verify actuator endpoints are enabled
-   - Check if application is listening on correct port
-   - Ensure MongoDB is accessible
-   - Check application logs for errors
+To rebuild and restart:
+```bash
+docker-compose up --build
+```
 
 ## Building for Production
 
@@ -638,66 +465,72 @@ gradlew.bat bootRun
 
 The application will be available at `http://localhost:8080/finance-tracker`
 
-## Continuous Deployment to Google Cloud Run
+## Deployment to Google Cloud Run
 
-This project is configured for automated deployment to Google Cloud Run using GitHub Actions and Cloud Build.
+This project is configured for automated deployment to Google Cloud Run using GitHub Actions.
 
 ### CI/CD Flow
 
-1. **Push to main branch** triggers GitHub Actions workflow
-2. **GitHub Actions** builds the JAR using Gradle
-3. **Cloud Build** builds Docker image and pushes to Artifact Registry
-4. **Cloud Run** automatically deploys the new version
+1. **Push to main branch** triggers GitHub Actions workflow (`.github/workflows/deploy.yaml`)
+2. **GitHub Actions** authenticates with GCP using service account
+3. **Docker image** is built using the Dockerfile
+4. **Image is pushed** to Artifact Registry
+5. **Cloud Run** automatically deploys the new version with environment variables
 
 ### Prerequisites
 
-1. **Google Cloud Project** with billing enabled
-2. **Artifact Registry** repository created:
-   ```bash
-   gcloud artifacts repositories create auto \
-     --repository-format=docker \
-     --location=asia-south1 \
-     --description="Docker repository for finance-service"
-   ```
-3. **Cloud Run API** enabled:
+Before deploying, complete the GCP setup:
+
+1. **Follow the [GCP Setup Guide](../GCP_SETUP.md)** for complete setup instructions
+2. **Configure GitHub Secrets and Variables** as described in [Backend Deployment Setup](../.github/BACKEND_DEPLOY_SETUP.md)
+
+### Quick Setup Summary
+
+1. **Enable Required APIs:**
    ```bash
    gcloud services enable run.googleapis.com
-   gcloud services enable cloudbuild.googleapis.com
+   gcloud services enable artifactregistry.googleapis.com
    ```
-4. **Service Account** with required permissions:
+
+2. **Create Artifact Registry Repository:**
    ```bash
-   gcloud iam service-accounts create github-actions-sa \
-     --display-name="GitHub Actions Service Account"
-   
-   gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
-     --member="serviceAccount:github-actions-sa@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
+   gcloud artifacts repositories create finance-tracker \
+     --repository-format=docker \
+     --location=asia-south1 \
+     --description="Docker repository for Finance Tracker backend"
+   ```
+
+3. **Create Service Account:**
+   ```bash
+   gcloud iam service-accounts create github-cd \
+     --display-name="GitHub Actions CI/CD Service Account"
+   ```
+
+4. **Grant Required Permissions:**
+   ```bash
+   gcloud projects add-iam-policy-binding PROJECT_ID \
+     --member="serviceAccount:github-cd@PROJECT_ID.iam.gserviceaccount.com" \
      --role="roles/run.admin"
    
-   gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
-     --member="serviceAccount:github-actions-sa@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
+   gcloud projects add-iam-policy-binding PROJECT_ID \
+     --member="serviceAccount:github-cd@PROJECT_ID.iam.gserviceaccount.com" \
      --role="roles/artifactregistry.writer"
-   
-   gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
-     --member="serviceAccount:github-actions-sa@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
-     --role="roles/cloudbuild.builds.editor"
    ```
 
-### Setting Up GitHub Secrets
-
-1. **Create Service Account Key:**
+5. **Create Service Account Key:**
    ```bash
    gcloud iam service-accounts keys create key.json \
-     --iam-account=github-actions-sa@YOUR_PROJECT_ID.iam.gserviceaccount.com
+     --iam-account=github-cd@PROJECT_ID.iam.gserviceaccount.com
    ```
 
-2. **Add GitHub Secrets:**
-   - Go to your GitHub repository
-   - Navigate to **Settings** → **Secrets and variables** → **Actions**
-   - Add the following secrets:
-     - `GCP_PROJECT`: Your Google Cloud Project ID
-     - `GCP_SA_KEY`: Contents of the `key.json` file (copy the entire JSON)
+6. **Configure GitHub Secrets and Variables:**
+   - See [Backend Deployment Setup](../.github/BACKEND_DEPLOY_SETUP.md) for detailed instructions
+   - Required secrets: `GCP_SA_KEY`, `MONGODB_URI`, `FIREBASE_CREDENTIALS_BASE64`
+   - Required variables: `SERVICE_NAME`, `REGION`, `REPO`, `GCP_PROJECT_ID`, `SPRING_PROFILES_ACTIVE`, `MONGODB_DATABASE`, `WEB_CLIENT_ID`
 
 ### Manual Deployment using gcloud CLI
+
+For manual deployment without GitHub Actions:
 
 #### Prerequisites
 
@@ -710,53 +543,52 @@ This project is configured for automated deployment to Google Cloud Run using Gi
 
 #### Build and Deploy
 
-1. **Build the JAR:**
+1. **Build Docker image:**
    ```bash
    cd backend
-   ./gradlew clean build -x test
+   docker build -f DockerFile -t ${REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${REPO}/${SERVICE_NAME} .
    ```
 
-2. **Build Docker image:**
+2. **Authenticate Docker with Artifact Registry:**
    ```bash
-   docker build -t asia-south1-docker.pkg.dev/YOUR_PROJECT_ID/auto/finance-service:latest .
+   gcloud auth configure-docker ${REGION}-docker.pkg.dev
    ```
 
 3. **Push to Artifact Registry:**
    ```bash
-   gcloud auth configure-docker asia-south1-docker.pkg.dev
-   docker push asia-south1-docker.pkg.dev/YOUR_PROJECT_ID/auto/finance-service:latest
+   docker push ${REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${REPO}/${SERVICE_NAME}
    ```
 
 4. **Deploy to Cloud Run:**
    ```bash
-   gcloud run deploy finance-service \
-     --image asia-south1-docker.pkg.dev/YOUR_PROJECT_ID/auto/finance-service:latest \
-     --region asia-south1 \
+   gcloud run deploy ${SERVICE_NAME} \
+     --image ${REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${REPO}/${SERVICE_NAME} \
+     --region ${REGION} \
      --platform managed \
      --allow-unauthenticated \
      --set-env-vars SPRING_PROFILES_ACTIVE=prod \
      --set-env-vars MONGODB_URI=your-mongodb-uri \
-     --set-env-vars MONGODB_DATABASE=finance_tracker
+     --set-env-vars MONGODB_DATABASE=finance_tracker \
+     --set-env-vars FIREBASE_CREDENTIALS_BASE64=your-base64-encoded-credentials \
+     --set-env-vars WEB_CLIENT_ID=your-google-client-id
    ```
 
-#### Using Cloud Build
-
-Alternatively, use Cloud Build directly:
-
-```bash
-cd backend
-gcloud builds submit --config cloudbuild.yaml \
-  --substitutions SHORT_SHA=$(git rev-parse --short HEAD)
-```
+Replace variables:
+- `${REGION}` - Your GCP region (e.g., `asia-south1`)
+- `${GCP_PROJECT_ID}` - Your GCP project ID
+- `${REPO}` - Artifact Registry repository name (e.g., `finance-tracker`)
+- `${SERVICE_NAME}` - Cloud Run service name (e.g., `backend`)
 
 ### Cloud Run Configuration
 
-- **Service Name:** `finance-service`
-- **Region:** `asia-south1`
+The deployment uses the following configuration (set via GitHub Variables):
+
+- **Service Name:** Configured via `SERVICE_NAME` variable (e.g., `backend`)
+- **Region:** Configured via `REGION` variable (e.g., `asia-south1`)
 - **Platform:** `managed`
-- **Runtime:** Java 17
+- **Runtime:** Java 17 (via Dockerfile)
 - **Port:** 8080
-- **Artifact Registry:** `asia-south1-docker.pkg.dev/$PROJECT_ID/auto/finance-service`
+- **Artifact Registry:** `${REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${REPO}/${SERVICE_NAME}`
 
 ### Environment Variables in Cloud Run
 
@@ -788,17 +620,15 @@ gcloud run deploy finance-service \
 
 ### Viewing Build and Runtime Logs
 
-#### During Build (Cloud Build)
+#### GitHub Actions Build Logs
 
-View Cloud Build logs:
-```bash
-gcloud builds list --limit=5
-gcloud builds log BUILD_ID
-```
-
-Or view in Google Cloud Console:
-- Navigate to **Cloud Build** → **History**
-- Click on a build to see detailed logs
+- Go to your GitHub repository
+- Navigate to **Actions** tab
+- Click on the workflow run to see detailed build and deployment logs
+- Each step shows verbose output including:
+  - Docker build progress
+  - Image push to Artifact Registry
+  - Cloud Run deployment status
 
 #### Runtime Logs (Cloud Run)
 
@@ -818,27 +648,17 @@ gcloud run services logs read finance-service \
 ```
 
 Or view in Google Cloud Console:
-- Navigate to **Cloud Run** → **finance-service** → **Logs** tab
-
-#### GitHub Actions Logs
-
-- Go to your GitHub repository
-- Navigate to **Actions** tab
-- Click on the workflow run to see detailed build and deployment logs
-- Each step shows verbose output including:
-  - Gradle build progress
-  - Docker build progress
-  - Cloud Build submission
-  - Cloud Run deployment status
-  - Recent application logs
+- Navigate to **Cloud Run** → Select your service → **Logs** tab
 
 #### Debugging Build Issues
 
 If build fails, check:
-1. **Gradle Build Logs**: Look for compilation errors in the "Build JAR with Gradle" step
-2. **Docker Build Logs**: Check Dockerfile execution in Cloud Build logs
+1. **Docker Build Logs**: Check Dockerfile execution in GitHub Actions logs
+2. **Artifact Registry Push**: Verify image push succeeded
 3. **Cloud Run Deployment**: Verify service deployment in the "Deploy to Cloud Run" step
 4. **Application Startup**: Check Cloud Run logs for runtime errors
+5. **Environment Variables**: Verify all required environment variables are set in GitHub Variables/Secrets
+6. **Service Account Permissions**: Ensure service account has required IAM roles
 
 ### Project Structure
 
@@ -851,9 +671,9 @@ backend/
 │   │       └── application.properties
 ├── build.gradle              # Gradle build configuration (Java 17, Spring Boot)
 ├── settings.gradle           # Gradle settings
-├── Dockerfile                # Multi-stage Docker build with verbose logging
-├── .dockerignore             # Docker ignore patterns
-└── cloudbuild.yaml           # Cloud Build configuration with detailed logging
+├── Dockerfile                # Multi-stage Docker build (Gradle + JDK)
+├── docker-compose.yml        # Docker Compose for local development
+└── .dockerignore             # Docker ignore patterns
 ```
 
 ## Environment Variables Setup

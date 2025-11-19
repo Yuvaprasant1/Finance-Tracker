@@ -16,6 +16,7 @@ Modern React TypeScript web application for tracking personal expenses. Built wi
 
 - **Node.js** 14+ and **npm** (or yarn/pnpm)
 - Backend API running (see [Backend README](../backend/README.md))
+- Firebase project (for production deployment)
 
 ## Setup
 
@@ -25,15 +26,25 @@ Modern React TypeScript web application for tracking personal expenses. Built wi
 npm install
 ```
 
-### 2. Configure API Endpoint
+### 2. Configure Environment Variables
 
-Update the API base URL in `src/services/api.service.ts` if your backend is running on a different host/port:
+Create a `.env` file in the `react_frontend` directory with your configuration:
 
-```typescript
-constructor(baseURL: string = 'http://localhost:8080/finance-tracker/api/v1') {
-  // ...
-}
+```env
+# Backend API Configuration
+REACT_APP_API_BASE_URL=http://localhost:8080/finance-tracker/api/v1
+
+# Firebase Configuration (get from Firebase Console)
+REACT_APP_FIREBASE_API_KEY=your-firebase-api-key
+REACT_APP_FIREBASE_AUTH_DOMAIN=your-project-id.firebaseapp.com
+REACT_APP_FIREBASE_PROJECT_ID=your-project-id
+REACT_APP_FIREBASE_STORAGE_BUCKET=your-project-id.appspot.com
+REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your-messaging-sender-id
+REACT_APP_FIREBASE_APP_ID=your-app-id
+REACT_APP_FIREBASE_MEASUREMENT_ID=your-measurement-id
 ```
+
+**Note:** The API base URL is configured via environment variables, not hardcoded in the service file.
 
 ### 3. Start Development Server
 
@@ -122,7 +133,7 @@ Launches the test runner in interactive watch mode.
 ## Project Structure
 
 ```
-frontend-web/
+react_frontend/
 ├── public/
 │   └── index.html              # HTML template
 ├── src/
@@ -261,132 +272,182 @@ REACT_APP_API_BASE_URL=https://your-backend-domain.com/finance-tracker/api/v1
 
 ## Deployment
 
-### Deployment on Render
+This project is configured for automated deployment to **Firebase Hosting** using GitHub Actions.
 
-#### Prerequisites
+### CI/CD Flow
 
-1. GitHub repository with your code
-2. Render account (sign up at https://render.com)
-3. Backend API deployed on Render (see [Backend README](../backend/README.md))
+1. **Push to main branch** with changes in `react_frontend/` triggers GitHub Actions workflow (`.github/workflows/firebase-deploy.yaml`)
+2. **GitHub Actions** installs dependencies and builds the React app
+3. **Environment variables** are injected from GitHub Variables
+4. **Firebase CLI** deploys the build to Firebase Hosting
 
-#### Deployment Steps
+### Prerequisites
 
-##### Option 1: Using Render Blueprint (Recommended)
+Before deploying, complete the Firebase setup:
 
-1. **Connect Repository to Render:**
-   - Go to Render Dashboard
-   - Click "New +" → "Blueprint"
-   - Connect your GitHub repository
-   - Render will detect `render.yaml` and create services automatically
+1. **Follow the [Firebase Setup Guide](../.github/FIREBASE_SETUP.md)** for complete setup instructions
+2. **Configure GitHub Secrets and Variables** as described in the Firebase Setup Guide
 
-2. **Configure Environment Variables:**
-   - After services are created, go to the frontend service settings
-   - Navigate to "Environment" section
-   - Add the following environment variable:
-     ```
-     REACT_APP_API_BASE_URL=https://your-backend-service-name.onrender.com/finance-tracker/api/v1
-     ```
-   - Replace `your-backend-service-name` with your actual backend service name
-   - Example: `https://finance-tracker-backend.onrender.com/finance-tracker/api/v1`
+### Quick Setup Summary
 
-3. **Deploy:**
-   - Render will automatically build and deploy
-   - Monitor the build logs
-   - Service will be available at `https://your-frontend-service-name.onrender.com`
+1. **Create Firebase Project:**
+   - Go to [Firebase Console](https://console.firebase.google.com/)
+   - Create a new project or use existing project
+   - Enable Firebase Hosting
 
-##### Option 2: Manual Service Creation
+2. **Get Firebase Configuration:**
+   - Go to Project Settings → General
+   - Scroll to "Your apps" section
+   - Add a web app if not already added
+   - Copy Firebase configuration values
 
-1. **Create Static Site Service:**
-   - Go to Render Dashboard
-   - Click "New +" → "Static Site"
-   - Connect your GitHub repository
-   - Select the repository and branch
+3. **Get Firebase Service Account Key:**
+   - Go to Project Settings → Service Accounts
+   - Click "Generate New Private Key"
+   - Download the JSON file
 
-2. **Configure Service:**
-   - **Name:** finance-tracker-frontend
-   - **Build Command:** `cd frontend-web && npm install && npm run build`
-   - **Publish Directory:** `frontend-web/build`
-   - **Plan:** Free (or upgrade for production)
-   - **Region:** Choose your preferred region (should match backend region)
+4. **Configure GitHub Secrets and Variables:**
+   - See [Firebase Setup Guide](../.github/FIREBASE_SETUP.md) for detailed instructions
+   - Required secret: `FIREBASE_SERVICE_ACCOUNT_KEY`
+   - Required variables: `FIREBASE_PROJECT_ID`, `REACT_APP_FIREBASE_*`, `REACT_APP_API_BASE_URL`
 
-3. **Set Environment Variables:**
-   - In the "Environment" section, add:
-     ```
-     REACT_APP_API_BASE_URL=https://your-backend-service-name.onrender.com/finance-tracker/api/v1
-     ```
-   - Replace with your actual backend URL
+### Deployment Workflow
 
-4. **Configure Redirects (for React Router):**
-   - The `_redirects` file in `public/` folder automatically handles routing
-   - This file is included in the build and tells Render to serve `index.html` for all routes
-   - If redirects don't work, manually configure in Render dashboard:
-     - Go to "Redirects/Rewrites" section
-     - Add: Source `/*` → Destination `/index.html` (Action: Rewrite)
-   - This fixes 404 errors when refreshing pages like `/login` or `/dashboard`
+#### Automatic Deployment
 
-5. **Deploy:**
-   - Click "Create Static Site"
-   - Render will build and deploy automatically
-   - Monitor the build logs
+- Push code to `main` branch with changes in `react_frontend/` directory
+- GitHub Actions automatically builds and deploys to Firebase Hosting
+- Monitor deployment in GitHub Actions tab
 
-##### Option 3: Docker Deployment (Advanced)
+#### Manual Deployment
 
-If you prefer Docker deployment with nginx:
+You can also trigger the workflow manually:
+1. Go to GitHub repository → Actions tab
+2. Select "Deploy Frontend to Firebase Hosting" workflow
+3. Click "Run workflow" → "Run workflow"
 
-1. **Create Web Service:**
-   - Go to Render Dashboard
-   - Click "New +" → "Web Service"
-   - Connect your GitHub repository
-   - Select the repository and branch
+### Firebase Hosting Configuration
 
-2. **Configure Service:**
-   - **Name:** finance-tracker-frontend
-   - **Environment:** Docker
-   - **Dockerfile Path:** `./frontend-web/Dockerfile`
-   - **Docker Context:** `./frontend-web`
-   - **Plan:** Free (or upgrade for production)
-   - **Region:** Choose your preferred region
+The deployment uses `firebase.json` for hosting configuration:
 
-3. **Set Environment Variables:**
-   - `REACT_APP_API_BASE_URL=https://your-backend-service-name.onrender.com/finance-tracker/api/v1`
+- **Public Directory:** `build` (React production build)
+- **SPA Routing:** All routes rewrite to `/index.html` for React Router
+- **Caching:** Static assets cached for 1 year
+- **Headers:** Proper cache-control headers for assets
 
-4. **Deploy:**
-   - Click "Create Web Service"
-   - Render will build and deploy automatically
+### Environment Variables
 
-#### Render Environment Variables
+All environment variables are set via GitHub Variables and injected during build:
 
 | Variable | Description | Example | Required |
 |----------|-------------|---------|----------|
+| `FIREBASE_PROJECT_ID` | Firebase project ID | `finance-tracker-abc123` | Yes |
 | `REACT_APP_FIREBASE_API_KEY` | Firebase API key | `AIzaSyBxIMRdkFJQVm0U54vfZtztQ62TxWCG0bk` | Yes |
-| `REACT_APP_FIREBASE_AUTH_DOMAIN` | Firebase auth domain | `finance-tracker-53c8a.firebaseapp.com` | Yes |
-| `REACT_APP_FIREBASE_PROJECT_ID` | Firebase project ID | `finance-tracker-53c8a` | Yes |
-| `REACT_APP_FIREBASE_STORAGE_BUCKET` | Firebase storage bucket | `finance-tracker-53c8a.firebasestorage.app` | Yes |
+| `REACT_APP_FIREBASE_AUTH_DOMAIN` | Firebase auth domain | `finance-tracker-abc123.firebaseapp.com` | Yes |
+| `REACT_APP_FIREBASE_PROJECT_ID` | Firebase project ID | `finance-tracker-abc123` | Yes |
+| `REACT_APP_FIREBASE_STORAGE_BUCKET` | Firebase storage bucket | `finance-tracker-abc123.appspot.com` | Yes |
 | `REACT_APP_FIREBASE_MESSAGING_SENDER_ID` | Firebase messaging sender ID | `1058479237538` | Yes |
 | `REACT_APP_FIREBASE_APP_ID` | Firebase app ID | `1:1058479237538:web:ace1ebbe05721fe74c2afb` | Yes |
 | `REACT_APP_FIREBASE_MEASUREMENT_ID` | Firebase measurement ID | `G-3MYCLH6EHZ` | No |
-| `REACT_APP_API_BASE_URL` | Backend API base URL | `https://finance-tracker-backend.onrender.com/finance-tracker/api/v1` | Yes |
+| `REACT_APP_API_BASE_URL` | Backend API base URL | `https://your-backend-url.run.app/finance-tracker/api/v1` | Yes |
 
 **Important Notes:**
-1. **Backend URL:** Make sure your backend is deployed and accessible before deploying the frontend
-2. **HTTPS:** Use HTTPS URLs for production (Render provides HTTPS automatically)
-3. **CORS:** Ensure your backend CORS configuration allows requests from your frontend domain
-4. **Build Time:** Environment variables are embedded at build time, so changes require a rebuild
+1. **Backend URL:** Use your Cloud Run backend URL for `REACT_APP_API_BASE_URL`
+2. **Build Time:** Environment variables are embedded at build time, so changes require a rebuild
+3. **HTTPS:** Firebase Hosting provides HTTPS automatically
+4. **CORS:** Ensure your backend CORS configuration allows requests from Firebase Hosting domain
 
-#### Render Deployment Configuration
+### Manual Deployment using Firebase CLI
 
-**Build Settings:**
-- **Build Command:** `cd frontend-web && npm install && npm run build`
-- **Publish Directory:** `frontend-web/build`
-- **Environment Variables:** Set `REACT_APP_API_BASE_URL` in Render dashboard
+For manual deployment without GitHub Actions:
 
-**Static Site Features:**
-- **Auto-deploy:** Automatically deploys on git push to main branch
-- **Logs:** View application logs in Render dashboard
+#### Prerequisites
+
+1. Install Firebase CLI:
+   ```bash
+   npm install -g firebase-tools
+   ```
+
+2. Authenticate:
+   ```bash
+   firebase login
+   ```
+
+3. Initialize Firebase (if not already done):
+   ```bash
+   cd react_frontend
+   firebase init hosting
+   ```
+
+#### Build and Deploy
+
+1. **Set Environment Variables:**
+   Create a `.env.production` file or set environment variables:
+   ```bash
+   export REACT_APP_API_BASE_URL=https://your-backend-url.run.app/finance-tracker/api/v1
+   export REACT_APP_FIREBASE_API_KEY=your-api-key
+   # ... other Firebase variables
+   ```
+
+2. **Build the App:**
+   ```bash
+   npm run build
+   ```
+
+3. **Deploy to Firebase:**
+   ```bash
+   firebase deploy --only hosting
+   ```
+
+### Firebase Hosting Features
+
+- **Auto-deploy:** Automatically deploys on git push via GitHub Actions
 - **SSL:** Automatic HTTPS/SSL certificates
-- **Custom Domain:** Add your custom domain
+- **Custom Domain:** Add your custom domain in Firebase Console
 - **SPA Routing:** Configured for React Router client-side routing
-- **Fast Builds:** Static site deployment is faster than Docker builds
+- **CDN:** Global CDN for fast content delivery
+- **Rollback:** Easy rollback to previous versions in Firebase Console
+
+### Viewing Deployment Logs
+
+#### GitHub Actions Logs
+
+- Go to your GitHub repository
+- Navigate to **Actions** tab
+- Click on the workflow run to see detailed build and deployment logs
+- Each step shows verbose output including:
+  - npm install progress
+  - React build progress
+  - Firebase deployment status
+
+#### Firebase Console
+
+- Go to [Firebase Console](https://console.firebase.google.com/)
+- Select your project
+- Navigate to **Hosting** → **Deployments**
+- View deployment history and logs
+
+### Troubleshooting Deployment
+
+1. **Build Fails:**
+   - Check GitHub Actions logs for npm install errors
+   - Verify all environment variables are set correctly
+   - Check for missing dependencies in `package.json`
+
+2. **Firebase Authentication Fails:**
+   - Verify `FIREBASE_SERVICE_ACCOUNT_KEY` secret contains valid JSON
+   - Ensure service account has "Firebase Hosting Admin" role
+   - Check that `FIREBASE_PROJECT_ID` variable matches your Firebase project
+
+3. **Deployment Fails:**
+   - Check Firebase project ID is correct
+   - Verify Firebase Hosting is enabled in your Firebase project
+   - Ensure the service account has proper permissions
+
+4. **Environment Variables Missing:**
+   - Verify all required variables are set in GitHub Variables
+   - Check that variable names match exactly (case-sensitive)
+   - Ensure `REACT_APP_` prefix is included for all React environment variables
 
 ### Other Deployment Options
 
@@ -397,7 +458,7 @@ The `build` folder contains static files that can be deployed to:
 - **Nginx** - Serve the `build` folder using nginx
 - **Apache** - Serve the `build` folder using Apache
 
-**Note:** For other platforms, make sure to set the `REACT_APP_API_BASE_URL` environment variable during the build process.
+**Note:** For other platforms, make sure to set all `REACT_APP_*` environment variables during the build process.
 
 ## Available Scripts
 
