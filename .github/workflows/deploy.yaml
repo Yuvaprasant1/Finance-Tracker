@@ -38,11 +38,13 @@ jobs:
       - name: Deploy to Cloud Run
         run: |
           IMAGE="${REGION}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/$REPO/$SERVICE_NAME"
+          SA_EMAIL=$(echo '${{ secrets.GCP_SA_KEY }}' | jq -r '.client_email')
           gcloud run deploy $SERVICE_NAME \
             --image $IMAGE \
             --region $REGION \
             --platform managed \
             --allow-unauthenticated \
+            --service-account $SA_EMAIL \
             --set-env-vars SPRING_PROFILES_ACTIVE=${{ vars.SPRING_PROFILES_ACTIVE }} \
             --set-env-vars MONGODB_URI=${{ secrets.MONGODB_URI }} \
             --set-env-vars MONGODB_DATABASE=${{ vars.MONGODB_DATABASE }} \
