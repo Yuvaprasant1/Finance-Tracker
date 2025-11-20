@@ -38,14 +38,11 @@ jobs:
       - name: Deploy to Cloud Run
         run: |
           IMAGE="${REGION}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/$REPO/$SERVICE_NAME"
-          PROJECT_NUMBER=$(gcloud projects describe ${{ vars.GCP_PROJECT_ID }} --format="value(projectNumber)")
-          DEFAULT_SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
           gcloud run deploy $SERVICE_NAME \
             --image $IMAGE \
             --region $REGION \
             --platform managed \
             --allow-unauthenticated \
-            --service-account $DEFAULT_SA \
             --set-env-vars SPRING_PROFILES_ACTIVE=${{ vars.SPRING_PROFILES_ACTIVE }} \
             --set-env-vars MONGODB_URI=${{ secrets.MONGODB_URI }} \
             --set-env-vars MONGODB_DATABASE=${{ vars.MONGODB_DATABASE }} \
