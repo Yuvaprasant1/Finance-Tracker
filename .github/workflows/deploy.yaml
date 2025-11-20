@@ -47,4 +47,4 @@ jobs:
             --set-env-vars MONGODB_URI=${{ secrets.MONGODB_URI }} \
             --set-env-vars MONGODB_DATABASE=${{ vars.MONGODB_DATABASE }} \
             --set-env-vars FIREBASE_CREDENTIALS_BASE64=${{ secrets.FIREBASE_CREDENTIALS_BASE64 }} \
-            --set-env-vars WEB_CLIENT_ID=${{ vars.WEB_CLIENT_ID }}
+            --set-env-vars WEB_CLIENT_ID=${{ secrets.WEB_CLIENT_ID }}
