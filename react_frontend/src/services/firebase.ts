@@ -68,3 +68,8 @@ const getFirebaseConfig = (): FirebaseOptions => {
 const firebaseConfig = getFirebaseConfig();
 const app = initializeApp(firebaseConfig);
 export const firebaseAuth = getAuth(app);
+
+initializeAppCheck(app, {
+  provider: new ReCaptchaV3Provider("6LfeTRYsAAAAAEbpLxtxoINoVHUiehEktByyQhfb"),
+  isTokenAutoRefreshEnabled: true,
+});
